@@ -1,0 +1,48 @@
+.forecast-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.chart-container {
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+  border-color: var(--accent-teal);
+  box-shadow: 0 12px 40px rgba(78, 205, 196, 0.15);
+  transform: translateY(-5px);
+}
+
+.chart-container h3 {
+  color: var(--accent-teal);
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.chart-container canvas {
+  max-height: 300px;
+}
+
+@media (max-width: 768px) {
+  .forecast-charts {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-container {
+    padding: 1.5rem;
+  }
+
+  .chart-container h3 {
+    font-size: 1.1rem;
+  }
+}

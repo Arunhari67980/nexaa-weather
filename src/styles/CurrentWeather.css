@@ -1,0 +1,152 @@
+.current-weather {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.8) 0%, rgba(15, 23, 42, 0.8) 100%);
+  border: 2px solid var(--border-color);
+  border-radius: 20px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.current-weather:hover {
+  border-color: var(--accent-teal);
+  box-shadow: 0 12px 40px rgba(78, 205, 196, 0.15);
+}
+
+.weather-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.location-info h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.weather-description {
+  color: var(--accent-teal);
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.temperature-display {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.weather-icon {
+  font-size: 4rem;
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.temperature-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.current-temp {
+  font-size: 3.5rem;
+  font-weight: 700;
+  color: var(--accent-color);
+  line-height: 1;
+}
+
+.feels-like {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-top: 0.5rem;
+}
+
+.weather-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: rgba(78, 205, 196, 0.1);
+  border: 2px solid var(--border-color);
+  border-radius: 15px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.stat-card:hover {
+  background: rgba(78, 205, 196, 0.2);
+  border-color: var(--accent-teal);
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(78, 205, 196, 0.15);
+}
+
+.stat-icon {
+  font-size: 2rem;
+}
+
+.stat-content {
+  flex: 1;
+}
+
+.stat-label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.stat-value {
+  color: var(--text-primary);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+@media (max-width: 768px) {
+  .current-weather {
+    padding: 1.5rem;
+  }
+
+  .weather-header {
+    gap: 1rem;
+  }
+
+  .location-info h2 {
+    font-size: 1.8rem;
+  }
+
+  .temperature-display {
+    gap: 1rem;
+  }
+
+  .weather-icon {
+    font-size: 3rem;
+  }
+
+  .current-temp {
+    font-size: 2.5rem;
+  }
+
+  .weather-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
