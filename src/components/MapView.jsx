@@ -1,46 +1,39 @@
-import { MapPin, Compass } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 
 export default function MapView({ data, city }) {
   if (!data) return null
 
+  const stats = [
+    { label: 'Temperature', value: `${Math.round(data.main.temp)}°C` },
+    { label: 'Condition', value: data.weather[0].main },
+    { label: 'Humidity', value: `${data.main.humidity}%` },
+    { label: 'Wind', value: `${data.wind.speed.toFixed(1)} m/s` },
+  ]
+
   return (
-    <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-md">
+    <div className="glass-panel rounded-3xl p-8 animate-scale-in">
       <div className="flex items-center gap-3 mb-6">
-        <MapPin className="w-6 h-6 text-blue-400" />
+        <MapPin className="w-5 h-5 text-blue-400" />
         <h2 className="text-2xl font-bold text-white">{city}</h2>
       </div>
 
-      <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-        <p className="text-gray-300 mb-4">
-          Latitude: {data.coord.lat.toFixed(4)}° | Longitude: {data.coord.lon.toFixed(4)}°
+      <div className="rounded-2xl p-6 mb-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+        <p className="text-gray-400 text-sm mb-5 font-medium tabular-nums">
+          📍 {data.coord.lat.toFixed(4)}° N, {data.coord.lon.toFixed(4)}° E
         </p>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-gray-400 text-sm mb-1">Temperature</p>
-            <p className="text-3xl font-bold text-white">{Math.round(data.main.temp)}°C</p>
-          </div>
-          
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-gray-400 text-sm mb-1">Condition</p>
-            <p className="text-lg font-bold text-white capitalize">{data.weather[0].main}</p>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-gray-400 text-sm mb-1">Humidity</p>
-            <p className="text-3xl font-bold text-white">{data.main.humidity}%</p>
-          </div>
-
-          <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-            <p className="text-gray-400 text-sm mb-1">Wind Speed</p>
-            <p className="text-3xl font-bold text-white">{data.wind.speed.toFixed(1)} m/s</p>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {stats.map((s, i) => (
+            <div key={i} className="rounded-xl p-4" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.04)' }}>
+              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mb-1">{s.label}</p>
+              <p className="text-xl font-bold text-white capitalize">{s.value}</p>
+            </div>
+          ))}
         </div>
-
-        <p className="text-gray-400 text-sm mt-6 text-center">
-          📍 Map integration coming soon
-        </p>
       </div>
+
+      <p className="text-gray-600 text-xs text-center font-medium">
+        🗺️ Interactive map coming soon
+      </p>
     </div>
   )
 }

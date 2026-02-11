@@ -1,43 +1,50 @@
 import { getWeatherIcon } from '../api/weatherApi'
-import { Cloud, Droplets } from 'lucide-react'
 
 export default function HourlyForecastCarousel({ data, unit }) {
+  if (!data || data.length === 0) return null
+
   const tempSymbol = unit === 'metric' ? '°C' : '°F'
 
   return (
-    <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10 rounded-3xl p-6 backdrop-blur-md">
-      <h3 className="text-xl font-bold text-white mb-4">Hourly Forecast</h3>
-      
-      <div className="overflow-x-auto">
-        <div className="flex gap-3 pb-2">
+    <div className="glass-panel rounded-3xl p-6 md:p-8">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(to bottom, #4f8bff, #22d3ee)' }} />
+        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Hourly Forecast</h3>
+      </div>
+
+      <div className="overflow-x-auto pb-2 scrollbar-thin">
+        <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
           {data.slice(0, 12).map((item, idx) => {
-            const date = new Date(item.dt * 1000)
-            const time = date.toLocaleTimeString('en-US', {
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true,
-            })
+            const time = new Date(item.dt * 1000)
+            const hour = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+            const isNow = idx === 0
 
             return (
               <div
                 key={idx}
-                className="flex-shrink-0 bg-white/5 border border-white/10 rounded-2xl p-4 text-center min-w-[120px] hover:bg-white/10 hover:border-blue-400/30 transition"
+                className={`shrink-0 rounded-2xl p-4 text-center transition-all duration-300 group ${isNow ? 'animate-pulse-glow' : ''
+                  }`}
+                style={{
+                  minWidth: '110px',
+                  background: isNow
+                    ? 'linear-gradient(135deg, rgba(79,139,255,0.15) 0%, rgba(34,211,238,0.08) 100%)'
+                    : 'rgba(255,255,255,0.03)',
+                  border: isNow
+                    ? '1px solid rgba(79,139,255,0.25)'
+                    : '1px solid rgba(255,255,255,0.04)',
+                }}
               >
-                <p className="text-gray-400 text-sm font-medium mb-2">{time}</p>
-                <p className="text-3xl mb-2">{getWeatherIcon(item.weather[0].icon)}</p>
-                <p className="text-white font-bold mb-2">{Math.round(item.main.temp)}{tempSymbol}</p>
-                <p className="text-gray-400 text-xs mb-3 capitalize">{item.weather[0].main}</p>
-                
-                <div className="border-t border-white/10 pt-2 space-y-1">
-                  <div className="flex items-center justify-center gap-1 text-gray-400">
-                    <Droplets className="w-3 h-3" />
-                    <span className="text-xs">{item.main.humidity}%</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-1 text-gray-400">
-                    <Cloud className="w-3 h-3" />
-                    <span className="text-xs">{item.clouds.all}%</span>
-                  </div>
-                </div>
+                <p className={`text-[11px] font-bold uppercase tracking-wider mb-3 ${isNow ? 'text-blue-300' : 'text-gray-500'
+                  }`}>
+                  {isNow ? 'Now' : hour}
+                </p>
+                <div className="text-3xl mb-3 weather-icon">{getWeatherIcon(item.weather[0].icon)}</div>
+                <p className="text-lg font-bold text-white tracking-tight">
+                  {Math.round(item.main.temp)}°
+                </p>
+                <p className="text-[10px] text-gray-500 mt-1 capitalize line-clamp-1">
+                  {item.weather[0].description}
+                </p>
               </div>
             )
           })}

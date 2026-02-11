@@ -1,68 +1,35 @@
-import { Sun, Moon, Wind, Compass } from 'lucide-react'
+import { Droplets, Wind, Gauge, Eye, Thermometer, Cloud } from 'lucide-react'
 
 export default function DetailedWeather({ data, unit }) {
   if (!data) return null
 
-  const tempSymbol = unit === 'metric' ? '°C' : '°F'
+  const speedUnit = unit === 'metric' ? 'm/s' : 'mph'
 
-  const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-
-  const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString('en-US', {
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-
-  const getWindDirection = (degrees) => {
-    const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW']
-    const index = Math.round((degrees || 0) / 22.5) % 16
-    return directions[index]
-  }
+  const metrics = [
+    { icon: <Thermometer className="w-4 h-4 text-rose-400" />, label: 'Feels Like', value: `${Math.round(data.main.feels_like)}°` },
+    { icon: <Droplets className="w-4 h-4 text-cyan-400" />, label: 'Humidity', value: `${data.main.humidity}%` },
+    { icon: <Wind className="w-4 h-4 text-blue-400" />, label: 'Wind', value: `${data.wind.speed.toFixed(1)} ${speedUnit}` },
+    { icon: <Gauge className="w-4 h-4 text-violet-400" />, label: 'Pressure', value: `${data.main.pressure} hPa` },
+    { icon: <Eye className="w-4 h-4 text-indigo-400" />, label: 'Visibility', value: `${(data.visibility / 1000).toFixed(1)} km` },
+    { icon: <Cloud className="w-4 h-4 text-gray-400" />, label: 'Clouds', value: `${data.clouds.all}%` },
+  ]
 
   return (
-    <div className="space-y-4">
-      <DetailCard
-        title="Sun Times"
-        items={[
-          { icon: <Sun className="w-5 h-5 text-yellow-400" />, label: 'Sunrise', value: sunrise },
-          { icon: <Moon className="w-5 h-5 text-blue-400" />, label: 'Sunset', value: sunset },
-        ]}
-      />
+    <div className="glass-panel rounded-3xl p-6">
+      <div className="flex items-center gap-3 mb-5">
+        <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(to bottom, #22d3ee, #4f8bff)' }} />
+        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Details</h3>
+      </div>
 
-      <DetailCard
-        title="Wind"
-        items={[
-          { icon: <Wind className="w-5 h-5 text-cyan-400" />, label: 'Speed', value: `${data.wind.speed.toFixed(1)} ${unit === 'metric' ? 'm/s' : 'mph'}` },
-          { icon: <Compass className="w-5 h-5 text-amber-400" />, label: 'Direction', value: `${getWindDirection(data.wind.deg)} (${data.wind.deg}°)` },
-        ]}
-      />
-
-      <DetailCard
-        title="Temperature"
-        items={[
-          { label: 'Current', value: `${Math.round(data.main.temp)}${tempSymbol}` },
-          { label: 'Feels Like', value: `${Math.round(data.main.feels_like)}${tempSymbol}` },
-          { label: 'Dew Point', value: `${Math.round(data.main.temp - (100 - data.main.humidity) / 5)}${tempSymbol}` },
-        ]}
-      />
-    </div>
-  )
-}
-
-function DetailCard({ title, items }) {
-  return (
-    <div className="bg-gradient-to-br from-slate-800/40 to-slate-900/40 border border-white/10 rounded-2xl p-4 backdrop-blur-md hover:border-blue-400/30 transition">
-      <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wide mb-3">{title}</h3>
-      <div className="space-y-3">
-        {items.map((item, idx) => (
-          <div key={idx} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {item.icon}
-              <span className="text-gray-400 text-sm">{item.label}</span>
+      <div className="grid grid-cols-2 gap-3">
+        {metrics.map((m, idx) => (
+          <div key={idx} className="rounded-xl p-3 transition-colors"
+            style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.04)' }}>
+            <div className="flex items-center gap-2 mb-1.5">
+              {m.icon}
+              <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{m.label}</span>
             </div>
-            <span className="text-white font-semibold">{item.value}</span>
+            <p className="text-lg font-bold text-white tracking-tight">{m.value}</p>
           </div>
         ))}
       </div>

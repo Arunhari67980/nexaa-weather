@@ -1,54 +1,52 @@
 export default function LoadingSkeleton() {
+  const shimmer = {
+    background: 'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.03) 50%, rgba(255,255,255,0) 100%)',
+    backgroundSize: '200% 100%',
+    animation: 'shimmer 2s ease-in-out infinite',
+  }
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Current Weather Skeleton */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="bg-linear-to-r from-slate-800/50 to-slate-700/50 rounded-2xl p-6 animate-shimmer">
-            <div className="flex justify-between items-start mb-4">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Main card skeleton */}
+        <div className="lg:col-span-8">
+          <div className="glass-panel rounded-3xl p-8" style={shimmer}>
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <div className="h-8 w-32 bg-slate-600/50 rounded mb-2 animate-pulse"></div>
-                <div className="h-4 w-48 bg-slate-600/50 rounded animate-pulse"></div>
+                <div className="h-4 w-24 rounded-lg mb-3" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
+                <div className="h-6 w-48 rounded-lg" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
               </div>
-              <div className="h-20 w-20 bg-slate-600/50 rounded-full animate-pulse"></div>
+              <div className="h-20 w-20 rounded-full" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
             </div>
-            <div className="grid grid-cols-3 gap-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-slate-600/50 rounded animate-pulse"></div>
+            <div className="h-24 w-56 rounded-xl mb-8" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
+            <div className="grid grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="h-16 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}></div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* Sidebar Skeleton */}
-        <div className="space-y-4">
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="bg-linear-to-r from-slate-800/50 to-slate-700/50 rounded-2xl p-4 h-24 animate-shimmer animate-pulse"
-            ></div>
-          ))}
-        </div>
-      </div>
-
-      {/* Hourly Forecast Skeleton */}
-      <div className="bg-linear-to-r from-slate-800/50 to-slate-700/50 rounded-2xl p-6 animate-shimmer">
-        <div className="h-6 w-32 bg-slate-600/50 rounded mb-4 animate-pulse"></div>
-        <div className="flex gap-3 overflow-x-auto pb-2">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="shrink-0">
-              <div className="h-28 w-20 bg-slate-600/50 rounded-lg animate-pulse"></div>
+        {/* Sidebar skeletons */}
+        <div className="lg:col-span-4 space-y-4">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="glass-panel rounded-3xl p-6" style={shimmer}>
+              <div className="h-4 w-28 rounded-lg mb-4" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
+              <div className="space-y-3">
+                <div className="h-8 w-full rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}></div>
+                <div className="h-8 w-3/4 rounded-lg" style={{ background: 'rgba(255,255,255,0.04)' }}></div>
+              </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* Weekly Forecast Skeleton */}
-      <div className="bg-linear-to-r from-slate-800/50 to-slate-700/50 rounded-2xl p-6 animate-shimmer">
-        <div className="h-6 w-32 bg-slate-600/50 rounded mb-4 animate-pulse"></div>
-        <div className="space-y-2">
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="h-12 bg-slate-600/50 rounded animate-pulse"></div>
+      {/* Hourly skeleton */}
+      <div className="glass-panel rounded-3xl p-6" style={shimmer}>
+        <div className="h-4 w-32 rounded-lg mb-4" style={{ background: 'rgba(255,255,255,0.06)' }}></div>
+        <div className="flex gap-3 overflow-hidden">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map(i => (
+            <div key={i} className="shrink-0 h-28 w-24 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)' }}></div>
           ))}
         </div>
       </div>

@@ -1,277 +1,147 @@
 import { useState } from 'react'
-import { Settings, X, Sun, Eye, Bell, Gauge, MapPin, Palette } from 'lucide-react'
+import { Settings, X, Gauge, MapPin, Palette, Eye, Bell } from 'lucide-react'
 
 export default function SettingsPanel({
-  isOpen,
-  onClose,
-  unit,
-  onUnitChange,
-  showAlerts,
-  onAlertsChange,
-  viewMode,
-  onViewModeChange,
-  theme,
-  onThemeChange,
+  isOpen, onClose, unit, onUnitChange, showAlerts, onAlertsChange,
+  viewMode, onViewModeChange, theme, onThemeChange,
 }) {
   const [activeTab, setActiveTab] = useState('general')
-
   if (!isOpen) return null
 
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
-  }
+  const handleBackdrop = (e) => { if (e.target === e.currentTarget) onClose() }
+
+  const tabs = [
+    { id: 'general', label: 'General' },
+    { id: 'display', label: 'Display' },
+    { id: 'alerts', label: 'Alerts' },
+  ]
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-      onClick={handleBackdropClick}
-    >
-      <div className="bg-slate-900 border border-white/20 rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
+      onClick={handleBackdrop}>
+      <div className="glass-card rounded-3xl max-w-md w-full max-h-[85vh] overflow-hidden flex flex-col animate-scale-in"
+        style={{ background: 'rgba(12,16,32,0.95)', border: '1px solid rgba(255,255,255,0.1)' }}>
+
         {/* Header */}
-        <div className="bg-linear-to-r from-blue-600/20 to-purple-600/20 border-b border-white/10 px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center justify-between px-6 py-5" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+          <div className="flex items-center gap-3">
             <Settings className="w-5 h-5 text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Settings</h2>
+            <h2 className="text-lg font-bold text-white">Settings</h2>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1 hover:bg-white/10 rounded-lg transition"
-          >
-            <X className="w-5 h-5 text-gray-400" />
+          <button onClick={onClose} className="p-2 rounded-xl hover:bg-white/5 transition-colors">
+            <X className="w-4 h-4 text-gray-400" />
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-white/10">
-          <button
-            onClick={() => setActiveTab('general')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition ${
-              activeTab === 'general'
-                ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            General
-          </button>
-          <button
-            onClick={() => setActiveTab('display')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition ${
-              activeTab === 'display'
-                ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            Display
-          </button>
-          <button
-            onClick={() => setActiveTab('notifications')}
-            className={`flex-1 px-4 py-3 text-sm font-medium transition ${
-              activeTab === 'notifications'
-                ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-400'
-                : 'text-gray-400 hover:text-gray-300'
-            }`}
-          >
-            Alerts
-          </button>
+        <div className="flex px-6 gap-1 pt-2" style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={`px-4 py-2.5 text-xs font-bold uppercase tracking-wider rounded-t-lg transition-colors ${activeTab === t.id
+                  ? 'text-blue-400'
+                  : 'text-gray-500 hover:text-gray-300'
+                }`}
+              style={activeTab === t.id ? { background: 'rgba(79,139,255,0.08)', borderBottom: '2px solid #4f8bff' } : {}}>
+              {t.label}
+            </button>
+          ))}
         </div>
 
         {/* Content */}
-        <div className="overflow-y-auto flex-1">
-          {/* General Settings */}
+        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
+
           {activeTab === 'general' && (
-            <div className="px-6 py-4 space-y-6">
-              {/* Temperature Unit */}
-              <div>
-                <label className="flex items-center gap-2 mb-3">
-                  <Gauge className="w-4 h-4 text-blue-400" />
-                  <span className="text-white font-medium text-sm">Temperature Unit</span>
-                </label>
+            <>
+              <SettingGroup icon={<Gauge className="w-4 h-4 text-blue-400" />} label="Temperature Unit">
                 <div className="flex gap-2">
-                  {[
-                    { value: 'metric', label: '°C (Celsius)', desc: 'Metric' },
-                    { value: 'imperial', label: '°F (Fahrenheit)', desc: 'Imperial' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => onUnitChange(option.value)}
-                      className={`flex-1 px-3 py-2.5 rounded-lg transition text-sm font-medium ${
-                        unit === option.value
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="font-semibold">{option.label}</div>
-                      <div className="text-xs opacity-75">{option.desc}</div>
+                  {[{ v: 'metric', l: '°C Celsius' }, { v: 'imperial', l: '°F Fahrenheit' }].map(o => (
+                    <button key={o.v} onClick={() => onUnitChange(o.v)}
+                      className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${unit === o.v ? 'text-white' : 'text-gray-400 hover:text-white'
+                        }`}
+                      style={unit === o.v
+                        ? { background: 'rgba(79,139,255,0.2)', border: '1px solid rgba(79,139,255,0.3)' }
+                        : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }
+                      }>
+                      {o.l}
                     </button>
                   ))}
                 </div>
-              </div>
+              </SettingGroup>
 
-              {/* Default View */}
-              <div>
-                <label className="flex items-center gap-2 mb-3">
-                  <MapPin className="w-4 h-4 text-blue-400" />
-                  <span className="text-white font-medium text-sm">Default View</span>
-                </label>
+              <SettingGroup icon={<MapPin className="w-4 h-4 text-blue-400" />} label="Default View">
                 <div className="flex gap-2">
-                  {[
-                    { value: 'cards', label: 'Cards', desc: 'Dashboard' },
-                    { value: 'map', label: 'Map', desc: 'Geographic' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => onViewModeChange(option.value)}
-                      className={`flex-1 px-3 py-2.5 rounded-lg transition text-sm font-medium ${
-                        viewMode === option.value
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
-                      }`}
-                    >
-                      <div className="font-semibold">{option.label}</div>
-                      <div className="text-xs opacity-75">{option.desc}</div>
+                  {[{ v: 'cards', l: '📊 Dashboard' }, { v: 'map', l: '🗺️ Map' }].map(o => (
+                    <button key={o.v} onClick={() => onViewModeChange(o.v)}
+                      className={`flex-1 py-3 rounded-xl text-sm font-semibold transition-all ${viewMode === o.v ? 'text-white' : 'text-gray-400 hover:text-white'
+                        }`}
+                      style={viewMode === o.v
+                        ? { background: 'rgba(79,139,255,0.2)', border: '1px solid rgba(79,139,255,0.3)' }
+                        : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }
+                      }>
+                      {o.l}
                     </button>
                   ))}
                 </div>
-              </div>
-            </div>
+              </SettingGroup>
+            </>
           )}
 
-          {/* Display Settings */}
           {activeTab === 'display' && (
-            <div className="px-6 py-4 space-y-6">
-              {/* Theme */}
-              <div>
-                <label className="flex items-center gap-2 mb-3">
-                  <Palette className="w-4 h-4 text-blue-400" />
-                  <span className="text-white font-medium text-sm">Theme</span>
-                </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { value: 'auto', label: 'Auto', desc: '🌓' },
-                    { value: 'light', label: 'Light', desc: '☀️' },
-                    { value: 'dark', label: 'Dark', desc: '🌙' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => onThemeChange(option.value)}
-                      className={`px-3 py-3 rounded-lg transition text-sm font-medium flex flex-col items-center gap-1 ${
-                        theme === option.value
-                          ? 'bg-blue-500 text-white'
-                          : 'bg-white/5 text-gray-300 hover:bg-white/10'
+            <SettingGroup icon={<Palette className="w-4 h-4 text-blue-400" />} label="Theme">
+              <div className="grid grid-cols-3 gap-2">
+                {[{ v: 'auto', l: 'Auto', e: '🌓' }, { v: 'light', l: 'Light', e: '☀️' }, { v: 'dark', l: 'Dark', e: '🌙' }].map(o => (
+                  <button key={o.v} onClick={() => onThemeChange(o.v)}
+                    className={`py-4 rounded-xl text-sm font-semibold flex flex-col items-center gap-1.5 transition-all ${theme === o.v ? 'text-white' : 'text-gray-400 hover:text-white'
                       }`}
-                    >
-                      <span className="text-lg">{option.desc}</span>
-                      <span className="text-xs">{option.label}</span>
-                    </button>
-                  ))}
-                </div>
+                    style={theme === o.v
+                      ? { background: 'rgba(79,139,255,0.2)', border: '1px solid rgba(79,139,255,0.3)' }
+                      : { background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }
+                    }>
+                    <span className="text-xl">{o.e}</span>
+                    <span className="text-xs">{o.l}</span>
+                  </button>
+                ))}
               </div>
-
-              {/* Additional Display Options */}
-              <div>
-                <label className="flex items-center gap-2 mb-3">
-                  <Eye className="w-4 h-4 text-blue-400" />
-                  <span className="text-white font-medium text-sm">Display Options</span>
-                </label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
-                    <input
-                      type="checkbox"
-                      defaultChecked={true}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm text-gray-300">Show wind details</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
-                    <input
-                      type="checkbox"
-                      defaultChecked={true}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm text-gray-300">Show humidity</span>
-                  </label>
-                  <label className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition">
-                    <input
-                      type="checkbox"
-                      defaultChecked={true}
-                      className="w-4 h-4 rounded"
-                    />
-                    <span className="text-sm text-gray-300">Show pressure</span>
-                  </label>
-                </div>
-              </div>
-            </div>
+            </SettingGroup>
           )}
 
-          {/* Notifications Settings */}
-          {activeTab === 'notifications' && (
-            <div className="px-6 py-4 space-y-6">
-              {/* Alerts Banner */}
-              <div>
-                <label className="flex items-center gap-2 mb-3">
-                  <Bell className="w-4 h-4 text-blue-400" />
-                  <span className="text-white font-medium text-sm">Weather Alerts</span>
-                </label>
-                <label className="flex items-center gap-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg cursor-pointer hover:bg-blue-500/20 transition">
-                  <input
-                    type="checkbox"
-                    checked={showAlerts}
-                    onChange={(e) => onAlertsChange(e.target.checked)}
-                    className="w-4 h-4 rounded cursor-pointer"
-                  />
-                  <div>
-                    <div className="text-sm font-medium text-white">Enable Alert Banner</div>
-                    <div className="text-xs text-gray-400">Show weather warnings and alerts</div>
-                  </div>
-                </label>
-              </div>
-
-              {/* Notification Types */}
-              <div>
-                <label className="text-white font-medium text-sm mb-3 block">
-                  Alert Types
-                </label>
-                <div className="space-y-2">
-                  {[
-                    { name: 'severe', label: 'Severe Weather', desc: 'Storms, extreme heat/cold' },
-                    { name: 'wind', label: 'High Winds', desc: 'Wind speeds over 40 km/h' },
-                    { name: 'rain', label: 'Heavy Rain', desc: 'Rainfall alerts' },
-                    { name: 'snow', label: 'Snow Warnings', desc: 'Snowfall and blizzards' },
-                  ].map((alert) => (
-                    <label
-                      key={alert.name}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 cursor-pointer transition"
-                    >
-                      <input
-                        type="checkbox"
-                        defaultChecked={true}
-                        disabled={!showAlerts}
-                        className="w-4 h-4 rounded disabled:opacity-50"
-                      />
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-300">{alert.label}</div>
-                        <div className="text-xs text-gray-500">{alert.desc}</div>
-                      </div>
-                    </label>
-                  ))}
+          {activeTab === 'alerts' && (
+            <SettingGroup icon={<Bell className="w-4 h-4 text-blue-400" />} label="Weather Alerts">
+              <label className="flex items-center gap-3 p-4 rounded-xl cursor-pointer transition-colors"
+                style={{ background: showAlerts ? 'rgba(79,139,255,0.08)' : 'rgba(255,255,255,0.03)', border: `1px solid ${showAlerts ? 'rgba(79,139,255,0.2)' : 'rgba(255,255,255,0.06)'}` }}>
+                <input type="checkbox" checked={showAlerts} onChange={(e) => onAlertsChange(e.target.checked)}
+                  className="w-4 h-4 rounded accent-blue-500" />
+                <div>
+                  <p className="text-sm font-semibold text-white">Enable Alert Banner</p>
+                  <p className="text-xs text-gray-500">Show weather warnings and alerts</p>
                 </div>
-              </div>
-            </div>
+              </label>
+            </SettingGroup>
           )}
         </div>
 
         {/* Footer */}
-        <div className="border-t border-white/10 px-6 py-4 bg-black/20">
-          <button
-            onClick={onClose}
-            className="w-full px-4 py-2.5 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-lg transition"
-          >
+        <div className="px-6 py-4" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <button onClick={onClose}
+            className="w-full py-3 rounded-xl text-sm font-bold text-white transition-all"
+            style={{ background: 'linear-gradient(135deg, #4f8bff, #6366f1)', boxShadow: '0 4px 20px rgba(79,139,255,0.25)' }}>
             Done
           </button>
         </div>
       </div>
+    </div>
+  )
+}
+
+function SettingGroup({ icon, label, children }) {
+  return (
+    <div>
+      <div className="flex items-center gap-2 mb-3">
+        {icon}
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{label}</span>
+      </div>
+      {children}
     </div>
   )
 }
