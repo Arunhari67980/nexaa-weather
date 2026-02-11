@@ -68,10 +68,14 @@ export default function SearchBar({ onSearch }) {
   }
 
   return (
-    <div ref={wrapperRef} className="relative">
-      <div className="glass-panel flex items-center gap-2.5 rounded-xl px-4 py-2.5"
-        style={{ border: '1px solid rgba(255,255,255,0.08)' }}>
-        <Search className="w-4 h-4 text-gray-500 shrink-0" />
+    <div ref={wrapperRef} className="relative w-full">
+      {/* Search Input */}
+      <div className="glass-card flex items-center gap-3 rounded-2xl px-5 py-3 border border-white/12"
+        style={{
+          background: 'rgba(15, 23, 42, 0.6)',
+          transition: 'all 0.3s ease'
+        }}>
+        <Search className="w-5 h-5 text-blue-400 shrink-0" />
         <input
           ref={inputRef}
           type="text"
@@ -79,31 +83,51 @@ export default function SearchBar({ onSearch }) {
           onChange={(e) => handleInput(e.target.value)}
           onKeyDown={handleKeyDown}
           onFocus={() => suggestions.length > 0 && setShowSuggestions(true)}
-          placeholder="Search any city..."
-          className="flex-1 bg-transparent text-sm text-white placeholder-gray-500 font-medium tracking-wide"
+          placeholder="Search cities..."
+          className="flex-1 bg-transparent text-base text-white placeholder-gray-400 font-medium focus:outline-none"
+          style={{ fontSize: '15px', letterSpacing: '0.3px' }}
         />
-        {loading && <Loader className="w-4 h-4 text-gray-500 animate-spin-slow shrink-0" />}
+        {loading && (
+          <Loader className="w-5 h-5 text-blue-400 animate-spin shrink-0" />
+        )}
         {query && !loading && (
-          <button onClick={() => { setQuery(''); setSuggestions([]); setShowSuggestions(false) }}>
-            <X className="w-4 h-4 text-gray-500 hover:text-white transition-colors" />
+          <button 
+            onClick={() => { setQuery(''); setSuggestions([]); setShowSuggestions(false) }}
+            className="p-1 hover:bg-white/5 rounded-lg transition-all"
+          >
+            <X className="w-5 h-5 text-gray-400 hover:text-white" />
           </button>
         )}
       </div>
 
-      {showSuggestions && (
-        <div className="absolute top-full left-0 right-0 mt-2 glass-panel rounded-xl overflow-hidden z-50 animate-scale-in"
-          style={{ border: '1px solid rgba(255,255,255,0.08)', boxShadow: '0 20px 60px -12px rgba(0,0,0,0.5)' }}>
-          {suggestions.map((city, idx) => (
-            <button
-              key={`${city.name}-${city.country}`}
-              onClick={() => submit(city.name)}
-              className={`w-full text-left px-4 py-3 flex items-center justify-between text-sm transition-colors ${idx === selectedIdx ? 'bg-white/8 text-white' : 'text-gray-300 hover:bg-white/5 hover:text-white'
+      {/* Suggestions Dropdown */}
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 mt-3 glass-card rounded-2xl overflow-hidden z-50 animate-scale-in"
+          style={{
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(10, 14, 39, 0.85) 100%)',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            backdropFilter: 'blur(32px)'
+          }}>
+          <div className="max-h-80 overflow-y-auto scrollbar-thin">
+            {suggestions.slice(0, 8).map((city, idx) => (
+              <button
+                key={`${city.name}-${city.country}`}
+                onClick={() => submit(city.name)}
+                className={`w-full text-left px-5 py-3.5 flex items-center justify-between transition-all border-b border-white/5 last:border-b-0 ${
+                  idx === selectedIdx
+                    ? 'bg-blue-500/15 text-white'
+                    : 'text-gray-300 hover:bg-white/8 hover:text-white'
                 }`}
-            >
-              <span className="font-medium">{city.name}</span>
-              <span className="text-xs text-gray-500">{city.country}</span>
-            </button>
-          ))}
+              >
+                <div>
+                  <p className="font-semibold text-sm">{city.name}</p>
+                  <p className="text-xs text-gray-500">{city.country}</p>
+                </div>
+                <span className="text-2xl">📍</span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>

@@ -14,8 +14,8 @@ import EnhancedDetails from './components/EnhancedDetails'
 import TemperatureTrends from './components/TemperatureTrends'
 import AirQualityIndex from './components/AirQualityIndex'
 import ComparisonView from './components/ComparisonView'
-import { fetchWeatherData, fetchForecastData, fetchAirQuality } from './api/weatherApi'
-import { Cloud, MapPin, Settings, RefreshCw, Star, BarChart3 } from 'lucide-react'
+import { fetchWeatherData, fetchForecastData, fetchAirQuality, getWeatherIcon } from './api/weatherApi'
+import { Cloud, MapPin, Settings, RefreshCw, Star } from 'lucide-react'
 
 function App() {
   const [city, setCity] = useState('London')
@@ -104,181 +104,209 @@ function App() {
 
   return (
     <div className="min-h-screen text-white" style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}>
+      {/* Animated background */}
+      <div className="animated-background" />
 
       {/* ===== HEADER ===== */}
-      <header className="glass-panel sticky top-0 z-50" style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-between gap-4">
-          {/* Logo */}
+      <header className="glass-panel sticky top-0 z-50 border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
+          {/* Logo & Brand */}
           <div className="flex items-center gap-3 shrink-0 animate-slide-down">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #4f8bff 0%, #22d3ee 100%)' }}>
-              <Cloud className="w-5 h-5 text-white" />
+            <div className="relative w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden group"
+              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)' }}>
+              <Cloud className="w-6 h-6 text-white transition-transform group-hover:scale-110" />
+              <div className="absolute inset-0 rounded-2xl" style={{
+                background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
+                animation: 'shimmer 3s infinite'
+              }} />
             </div>
-            <span className="text-xl font-bold tracking-tight hidden sm:block text-gradient-blue">Nimbus</span>
+            <div className="hidden sm:flex flex-col">
+              <span className="text-base sm:text-lg font-bold text-white">Nimbus</span>
+              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium">Weather</span>
+            </div>
           </div>
 
           {/* Search */}
-          <div className="flex-1 max-w-lg">
+          <div className="flex-1 max-w-xs sm:max-w-md">
             <SearchBar onSearch={handleSearch} />
           </div>
 
-          {/* Actions */}
-          <div className="flex items-center gap-1.5 shrink-0 animate-slide-down">
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
             {currentWeather && (
               <>
                 <button
                   onClick={handleRefresh}
-                  className={`p-2.5 rounded-xl hover:bg-white/5 transition-all ${refreshing ? 'animate-spin-slow' : ''}`}
+                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all ${refreshing ? 'animate-spin' : ''}`}
                   title="Refresh"
                 >
-                  <RefreshCw className="w-4.5 h-4.5 text-gray-400 hover:text-white transition-colors" />
-                </button>
-
-                <button
-                  onClick={() => setShowComparison(true)}
-                  className="p-2.5 rounded-xl hover:bg-white/5 transition-all"
-                  title="Compare cities"
-                >
-                  <BarChart3 className="w-4.5 h-4.5 text-gray-400 hover:text-white transition-colors" />
+                  <RefreshCw className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 hover:text-white" />
                 </button>
 
                 <button
                   onClick={toggleFavorite}
-                  className={`p-2.5 rounded-xl transition-all ${isFavorited ? 'bg-amber-500/10 text-amber-400' : 'hover:bg-white/5 text-gray-400 hover:text-white'}`}
-                  title={isFavorited ? 'Remove favorite' : 'Add favorite'}
+                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all ${isFavorited ? 'text-yellow-400 bg-yellow-400/10' : 'text-gray-400 hover:bg-white/5'}`}
                 >
-                  <Star className="w-4.5 h-4.5" fill={isFavorited ? 'currentColor' : 'none'} />
+                  <Star className="w-4 sm:w-5 h-4 sm:h-5" fill={isFavorited ? 'currentColor' : 'none'} />
+                </button>
+
+                <button
+                  onClick={() => setViewMode(viewMode === 'cards' ? 'map' : 'cards')}
+                  className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all text-gray-400"
+                >
+                  <MapPin className="w-4 sm:w-5 h-4 sm:h-5" />
                 </button>
               </>
             )}
 
             <button
-              onClick={() => setViewMode(viewMode === 'cards' ? 'map' : 'cards')}
-              className="p-2.5 rounded-xl hover:bg-white/5 transition-all"
-              title="Toggle view"
-            >
-              <MapPin className="w-4.5 h-4.5 text-gray-400 hover:text-white transition-colors" />
-            </button>
-
-            <button
               onClick={() => setUnit(unit === 'metric' ? 'imperial' : 'metric')}
-              className="px-3 py-1.5 rounded-xl glass-card text-sm font-semibold tracking-wide"
-              style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+              className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl glass-panel text-xs sm:text-sm font-semibold hover:bg-white/5 transition-all"
             >
               °{unit === 'metric' ? 'C' : 'F'}
             </button>
 
             <button
               onClick={() => setShowSettings(true)}
-              className="p-2.5 rounded-xl hover:bg-white/5 transition-all"
-              title="Settings"
+              className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all text-gray-400"
             >
-              <Settings className="w-4.5 h-4.5 text-gray-400 hover:text-white transition-colors" />
+              <Settings className="w-4 sm:w-5 h-4 sm:h-5" />
             </button>
           </div>
         </div>
       </header>
 
-      {/* ===== HERO ===== */}
+      {/* ===== HERO SECTION ===== */}
       {currentWeather && (
-        <section className="animate-slide-down max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-4">
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest"
-                  style={{ background: 'rgba(79,139,255,0.15)', color: '#4f8bff', border: '1px solid rgba(79,139,255,0.2)' }}>
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 mr-1.5 animate-pulse-glow"></span>
-                  Live
-                </span>
-              </div>
-              <h2 className="text-5xl sm:text-6xl md:text-7xl font-bold text-white tracking-tighter text-glow leading-none">
-                {city}
-              </h2>
-              <p className="text-lg text-gray-400 mt-2 capitalize font-medium">
-                {currentWeather?.weather?.[0]?.description ?? ''}
-              </p>
-            </div>
+        <section className="relative overflow-hidden">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-center">
+              {/* Left: Weather Info */}
+              <div className="animate-slide-up">
+                <div className="inline-flex items-center gap-2 mb-4">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
+                    style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
+                    Live Weather
+                  </span>
+                </div>
+                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-3 text-glow">
+                  {city}
+                </h1>
+                <p className="text-base sm:text-lg md:text-xl text-gray-300 capitalize font-medium mb-6 sm:mb-8">
+                  {currentWeather?.weather?.[0]?.description ?? 'Clear skies'}
+                </p>
+                
+                <div className="flex items-baseline gap-2 sm:gap-3 mb-6 sm:mb-8">
+                  <span className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white text-gradient-blue">
+                    {Math.round(currentWeather.main.temp)}°
+                  </span>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm text-gray-400">Feels like {Math.round(currentWeather.main.feels_like)}°</p>
+                    <p className="text-sm text-gray-500">High: {Math.round(currentWeather.main.temp_max)}° / Low: {Math.round(currentWeather.main.temp_min)}°</p>
+                  </div>
+                </div>
 
-            <div className="glass-panel px-5 py-2.5 rounded-2xl flex items-center gap-3 self-start sm:self-auto">
-              <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">Updated</span>
-              <span className="text-sm font-bold text-white tabular-nums">
-                {new Date(currentWeather.dt * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </span>
+                {/* Quick Stats */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <QuickStat icon="💧" label="Humidity" value={`${currentWeather.main.humidity}%`} />
+                  <QuickStat icon="💨" label="Wind" value={`${currentWeather.wind.speed.toFixed(1)} m/s`} />
+                  <QuickStat icon="🔽" label="Pressure" value={`${currentWeather.main.pressure} mb`} />
+                  <QuickStat icon="👁️" label="Visibility" value={`${(currentWeather.visibility / 1000).toFixed(1)} km`} />
+                </div>
+              </div>
+
+              {/* Right: Large Weather Icon */}
+              <div className="flex justify-center items-center animate-drift">
+                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 flex items-center justify-center">
+                  <div className="absolute inset-0 rounded-full"
+                    style={{
+                      background: `radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)`,
+                      animation: 'pulse 4s ease-in-out infinite'
+                    }} />
+                  <div className="text-7xl sm:text-8xl md:text-9xl weather-icon-lg select-none">
+                    {getWeatherIcon(currentWeather.weather[0].icon)}
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </section>
       )}
 
       {/* ===== MAIN CONTENT ===== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pb-16">
-
-        {/* Error */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pb-12 sm:pb-16 lg:pb-20">
+        {/* Error Alert */}
         {error && (
-          <div className="mb-6 p-4 rounded-2xl animate-slide-down flex items-center gap-3"
-            style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)' }}>
-            <span className="text-xl">⚠️</span>
-            <span className="text-red-200 font-medium text-sm">{error}</span>
+          <div className="mb-8 p-6 rounded-2xl glass-panel border border-red-500/30 animate-slide-down"
+            style={{ background: 'rgba(239, 68, 68, 0.08)' }}>
+            <p className="text-red-300 font-medium">⚠️ {error}</p>
           </div>
         )}
 
-        {/* Loading */}
+        {/* Loading State */}
         {loading && !currentWeather ? (
           <LoadingSkeleton />
         ) : currentWeather ? (
           <>
-            {/* Alerts */}
+            {/* Alerts Banner */}
             {showAlerts && (
-              <div className="animate-slide-down mb-6">
+              <div className="animate-slide-down mb-8">
                 <AlertsBanner weather={currentWeather} />
               </div>
             )}
 
             {viewMode === 'cards' ? (
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="space-y-8">
+                {/* Hourly Forecast */}
+                {forecastData && (
+                  <div className="animate-scale-in" style={{ animationDelay: '100ms' }}>
+                    <HourlyForecastCarousel data={forecastData.list.slice(0, 12)} unit={unit} />
+                  </div>
+                )}
 
-                {/* === LEFT COLUMN (8 cols) === */}
-                <div className="lg:col-span-8 space-y-6">
-                  <div className="animate-scale-in">
-                    <CurrentWeatherCard data={currentWeather} unit={unit} city={city} />
+                {/* Main Grid - Balanced 2 Columns */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                  {/* Left Column */}
+                  <div className="space-y-6">
+                    {/* Temperature Trends */}
+                    {forecastData && (
+                      <div className="animate-scale-in" style={{ animationDelay: '200ms' }}>
+                        <TemperatureTrends data={forecastData} unit={unit} />
+                      </div>
+                    )}
+
+                    {/* Detailed Weather */}
+                    <div className="animate-scale-in" style={{ animationDelay: '300ms' }}>
+                      <DetailedWeather data={currentWeather} unit={unit} />
+                    </div>
+
+                    {/* Weekly Forecast */}
+                    {forecastData && (
+                      <div className="animate-scale-in" style={{ animationDelay: '400ms' }}>
+                        <WeeklyForecast data={forecastData} unit={unit} />
+                      </div>
+                    )}
                   </div>
 
-                  {forecastData && (
-                    <div className="animate-slide-up delay-100">
-                      <HourlyForecastCarousel data={forecastData.list.slice(0, 8)} unit={unit} />
+                  {/* Right Column */}
+                  <div className="space-y-6">
+                    {/* Enhanced Details */}
+                    <div className="animate-scale-in" style={{ animationDelay: '200ms' }}>
+                      <EnhancedDetails data={currentWeather} unit={unit} city={city} forecastData={forecastData} />
                     </div>
-                  )}
 
-                  {forecastData && (
-                    <div className="animate-scale-in delay-200">
-                      <TemperatureTrends data={forecastData} unit={unit} />
+                    {/* Air Quality */}
+                    {aqi && (
+                      <div className="animate-scale-in" style={{ animationDelay: '300ms' }}>
+                        <AirQualityIndex aqi={aqi} />
+                      </div>
+                    )}
+
+                    {/* Recent Searches */}
+                    <div className="animate-scale-in" style={{ animationDelay: '500ms' }}>
+                      <RecentSearches onSelect={handleSearch} recentSearches={recentSearches} favorites={favorites} />
                     </div>
-                  )}
-                </div>
-
-                {/* === RIGHT COLUMN (4 cols) === */}
-                <div className="lg:col-span-4 space-y-6">
-                  <div className="animate-scale-in delay-100">
-                    <EnhancedDetails data={currentWeather} unit={unit} city={city} forecastData={forecastData} />
-                  </div>
-
-                  {forecastData && (
-                    <div className="animate-slide-up delay-200">
-                      <WeeklyForecast data={forecastData} unit={unit} />
-                    </div>
-                  )}
-
-                  {aqi && (
-                    <div className="animate-scale-in delay-300">
-                      <AirQualityIndex aqi={aqi} />
-                    </div>
-                  )}
-
-                  <div className="animate-scale-in delay-400">
-                    <DetailedWeather data={currentWeather} unit={unit} />
-                  </div>
-
-                  <div className="animate-scale-in delay-500">
-                    <RecentSearches onSelect={handleSearch} recentSearches={recentSearches} favorites={favorites} />
                   </div>
                 </div>
               </div>
@@ -292,16 +320,11 @@ function App() {
       </main>
 
       {/* ===== FOOTER ===== */}
-      <footer className="glass-panel mt-auto py-6" style={{ borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="text-gray-500 text-xs font-medium tracking-wide">
+      <footer className="glass-panel border-t border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 text-center">
+          <p className="text-gray-400 text-xs font-medium tracking-wide">
             Nimbus Weather · Powered by OpenWeatherMap
           </p>
-          {currentWeather && (
-            <p className="text-gray-600 text-[10px] mt-1 tabular-nums">
-              Last sync: {new Date(currentWeather.dt * 1000).toLocaleTimeString()}
-            </p>
-          )}
         </div>
       </footer>
 
@@ -330,6 +353,16 @@ function App() {
           return weather
         }}
       />
+    </div>
+  )
+}
+
+function QuickStat({ icon, label, value }) {
+  return (
+    <div className="glass-panel p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all">
+      <p className="text-xl sm:text-2xl mb-1">{icon}</p>
+      <p className="text-[10px] sm:text-[11px] text-gray-400 font-semibold uppercase tracking-wide">{label}</p>
+      <p className="text-sm sm:text-base font-bold text-white">{value}</p>
     </div>
   )
 }

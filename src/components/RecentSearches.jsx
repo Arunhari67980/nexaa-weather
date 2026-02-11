@@ -1,50 +1,64 @@
-import { Clock, Star, X } from 'lucide-react'
+import { Clock, Star, MapPin } from 'lucide-react'
 
 export default function RecentSearches({ onSelect, recentSearches = [], favorites = [] }) {
   if (recentSearches.length === 0 && favorites.length === 0) return null
 
   return (
-    <div className="glass-panel rounded-3xl p-6">
+    <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 overflow-hidden">
       {/* Favorites */}
       {favorites.length > 0 && (
-        <div className="mb-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(to bottom, #fbbf24, #f59e0b)' }} />
-            <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Favorites</h3>
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1 h-6 rounded-full"
+              style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
+            <h3 className="text-base font-bold text-white uppercase tracking-tight">⭐ Favorites</h3>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="space-y-2">
             {favorites.map((city, idx) => (
               <button
                 key={idx}
                 onClick={() => onSelect(city)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all hover:scale-105"
-                style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24' }}
+                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all hover:scale-105 group"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
+                  border: '1px solid rgba(251, 191, 36, 0.2)'
+                }}
               >
-                <Star className="w-3 h-3" fill="currentColor" />
-                {city}
+                <div className="flex items-center gap-3">
+                  <Star className="w-4 h-4 text-amber-300" fill="currentColor" />
+                  <span className="text-sm font-semibold text-amber-200">{city}</span>
+                </div>
+                <MapPin className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Recent */}
+      {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <div>
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-1 h-5 rounded-full" style={{ background: 'rgba(255,255,255,0.15)' }} />
-            <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Recent</h3>
+          <div className="flex items-center gap-3 mb-5">
+            <div className="w-1 h-6 rounded-full"
+              style={{ background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6))' }} />
+            <h3 className="text-base font-bold text-white uppercase tracking-tight">🕐 Recent Searches</h3>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {recentSearches.slice(0, 6).map((city, idx) => (
+          <div className="grid grid-cols-1 gap-2">
+            {recentSearches.slice(0, 8).map((city, idx) => (
               <button
                 key={idx}
                 onClick={() => onSelect(city)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-400 transition-all hover:text-white hover:bg-white/5"
-                style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                className="flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium transition-all hover:scale-105 group"
+                style={{
+                  background: 'rgba(255, 255, 255, 0.04)',
+                  border: '1px solid rgba(255, 255, 255, 0.1)'
+                }}
               >
-                <Clock className="w-3 h-3" />
-                {city}
+                <div className="flex items-center gap-3">
+                  <Clock className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
+                  <span className="text-gray-300 group-hover:text-white transition-colors">{city}</span>
+                </div>
+                <MapPin className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors group-hover:translate-x-1" />
               </button>
             ))}
           </div>

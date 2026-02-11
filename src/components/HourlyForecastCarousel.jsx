@@ -6,15 +6,20 @@ export default function HourlyForecastCarousel({ data, unit }) {
   const tempSymbol = unit === 'metric' ? '°C' : '°F'
 
   return (
-    <div className="glass-panel rounded-3xl p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(to bottom, #4f8bff, #22d3ee)' }} />
-        <h3 className="text-sm font-bold text-gray-300 uppercase tracking-wider">Hourly Forecast</h3>
+    <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 overflow-hidden">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-8">
+        <div className="w-1 h-6 rounded-full"
+          style={{ background: 'linear-gradient(180deg, #3b82f6, #06b6d4)' }} />
+        <h3 className="text-base sm:text-lg font-bold text-white uppercase tracking-tight">
+          Hourly Forecast
+        </h3>
       </div>
 
-      <div className="overflow-x-auto pb-2 scrollbar-thin">
-        <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
-          {data.slice(0, 12).map((item, idx) => {
+      {/* Carousel */}
+      <div className="overflow-x-auto pb-4 scrollbar-thin">
+        <div className="flex gap-4" style={{ minWidth: 'max-content' }}>
+          {data.slice(0, 24).map((item, idx) => {
             const time = new Date(item.dt * 1000)
             const hour = time.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
             const isNow = idx === 0
@@ -22,27 +27,37 @@ export default function HourlyForecastCarousel({ data, unit }) {
             return (
               <div
                 key={idx}
-                className={`shrink-0 rounded-2xl p-4 text-center transition-all duration-300 group ${isNow ? 'animate-pulse-glow' : ''
-                  }`}
+                className={`shrink-0 rounded-2xl p-5 text-center transition-all duration-300 group hover:transform hover:scale-105 cursor-pointer`}
                 style={{
-                  minWidth: '110px',
+                  minWidth: '125px',
                   background: isNow
-                    ? 'linear-gradient(135deg, rgba(79,139,255,0.15) 0%, rgba(34,211,238,0.08) 100%)'
-                    : 'rgba(255,255,255,0.03)',
+                    ? 'linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(6, 182, 212, 0.1) 100%)'
+                    : 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%)',
                   border: isNow
-                    ? '1px solid rgba(79,139,255,0.25)'
-                    : '1px solid rgba(255,255,255,0.04)',
+                    ? '1px solid rgba(59, 130, 246, 0.4)'
+                    : '1px solid rgba(255, 255, 255, 0.08)',
+                  boxShadow: isNow
+                    ? '0 8px 24px rgba(59, 130, 246, 0.15)'
+                    : 'none'
                 }}
               >
-                <p className={`text-[11px] font-bold uppercase tracking-wider mb-3 ${isNow ? 'text-blue-300' : 'text-gray-500'
-                  }`}>
-                  {isNow ? 'Now' : hour}
+                <p className={`text-xs font-bold uppercase tracking-widest mb-4 ${isNow ? 'text-blue-300' : 'text-gray-400'}`}>
+                  {isNow ? '●  Now' : hour}
                 </p>
-                <div className="text-3xl mb-3 weather-icon">{getWeatherIcon(item.weather[0].icon)}</div>
-                <p className="text-lg font-bold text-white tracking-tight">
-                  {Math.round(item.main.temp)}°
+                
+                <div className="text-4xl mb-4 weather-icon group-hover:scale-110 transition-transform">
+                  {getWeatherIcon(item.weather[0].icon)}
+                </div>
+                
+                <p className="text-xl font-bold text-white tracking-tight mb-2">
+                  {Math.round(item.main.temp)}{tempSymbol}
                 </p>
-                <p className="text-[10px] text-gray-500 mt-1 capitalize line-clamp-1">
+                
+                <div className="flex items-center justify-center gap-1 mb-3">
+                  <span className="text-[10px] text-gray-500">💧 {item.main.humidity}%</span>
+                </div>
+
+                <p className="text-[10px] text-gray-500 capitalize line-clamp-2">
                   {item.weather[0].description}
                 </p>
               </div>
