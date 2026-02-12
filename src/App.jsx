@@ -121,7 +121,7 @@ function App() {
               }} />
             </div>
             <div className="hidden sm:flex flex-col">
-              <span className="text-base sm:text-lg font-bold text-white">Nimbus</span>
+              <span className="text-base sm:text-lg font-bold text-white">NEXAA</span>
               <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium">Weather</span>
             </div>
           </div>
