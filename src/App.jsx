@@ -1,7 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import './App.css'
 import SearchBar from './components/SearchBar'
-import CurrentWeatherCard from './components/CurrentWeatherCard'
 import DetailedWeather from './components/DetailedWeather'
 import HourlyForecastCarousel from './components/HourlyForecastCarousel'
 import WeeklyForecast from './components/WeeklyForecast'
@@ -14,8 +13,21 @@ import EnhancedDetails from './components/EnhancedDetails'
 import TemperatureTrends from './components/TemperatureTrends'
 import AirQualityIndex from './components/AirQualityIndex'
 import ComparisonView from './components/ComparisonView'
+import AtmosphericEngine from './components/AtmosphericEngine'
+import WeatherDock from './components/WeatherDock'
+import CursorGlow from './components/CursorGlow'
+import TiltCard from './components/TiltCard'
+import { initSmoothScroll, destroySmoothScroll } from './utils/smoothScroll'
 import { fetchWeatherData, fetchForecastData, fetchAirQuality, getWeatherIcon } from './api/weatherApi'
-import { Cloud, MapPin, Settings, RefreshCw, Star } from 'lucide-react'
+import { Cloud, MapPin, Settings, RefreshCw, Star, ArrowUpDown } from 'lucide-react'
+
+const seasonAccents = {
+  autumn: '#f0a352',
+  winter: '#38bdf8',
+  spring: '#f472b6',
+  summer: '#fbbf24',
+  storm: '#818cf8',
+}
 
 function App() {
   const [city, setCity] = useState('London')
@@ -44,8 +56,28 @@ function App() {
   const [refreshing, setRefreshing] = useState(false)
   const [showComparison, setShowComparison] = useState(false)
 
+  // Atmospheric Engine States
+  const [season, setSeason] = useState('autumn')
+  const [windSpeed, setWindSpeed] = useState('brisk')
+  const [isAutoSync, setIsAutoSync] = useState(true)
+  const atmosphericRef = useRef(null)
+
   const tempSymbol = unit === 'metric' ? '°C' : '°F'
   const speedUnit = unit === 'metric' ? 'm/s' : 'mph'
+  const activeAccent = seasonAccents[season] || '#f0a352'
+
+  // Initialize Lenis smooth scroll
+  useEffect(() => {
+    initSmoothScroll()
+    return () => {
+      destroySmoothScroll()
+    }
+  }, [])
+
+  // Sync data-season on root html element
+  useEffect(() => {
+    document.documentElement.setAttribute('data-season', season)
+  }, [season])
 
   // Save preferences
   useEffect(() => { localStorage.setItem('temperatureUnit', unit) }, [unit])
@@ -55,10 +87,28 @@ function App() {
   useEffect(() => { localStorage.setItem('recentSearches', JSON.stringify(recentSearches)) }, [recentSearches])
   useEffect(() => { localStorage.setItem('favoriteSearches', JSON.stringify(favorites)) }, [favorites])
 
-  useEffect(() => {
-    loadWeatherData(city)
-    setIsFavorited(favorites.includes(city))
-  }, [])
+  // Determine season automatically from weather telemetry
+  const determineSeason = (weatherData, currentUnit) => {
+    if (!weatherData) return 'autumn'
+    const main = weatherData.weather[0]?.main?.toLowerCase() || ''
+    const desc = weatherData.weather[0]?.description?.toLowerCase() || ''
+    const temp = weatherData.main?.temp
+    const tempC = currentUnit === 'metric' ? temp : ((temp - 32) * 5) / 9
+
+    if (main.includes('snow') || desc.includes('snow') || tempC <= 1) {
+      return 'winter'
+    }
+    if (main.includes('thunder') || main.includes('storm') || main.includes('rain') || main.includes('drizzle')) {
+      return 'storm'
+    }
+    if (tempC >= 23 || (main.includes('clear') && tempC >= 20)) {
+      return 'summer'
+    }
+    if (tempC >= 12 && tempC < 23) {
+      return 'spring'
+    }
+    return 'autumn'
+  }
 
   const loadWeatherData = async (searchCity) => {
     setLoading(true)
@@ -68,10 +118,16 @@ function App() {
       setCurrentWeather(weather)
       setCity(searchCity)
       setIsFavorited(favorites.includes(searchCity))
+
+      if (isAutoSync) {
+        const detected = determineSeason(weather, unit)
+        setSeason(detected)
+      }
+
       const airQuality = await fetchAirQuality(weather.coord.lat, weather.coord.lon)
       setAqi(airQuality)
       setRecentSearches((prev) => {
-        const filtered = prev.filter(c => c !== searchCity)
+        const filtered = prev.filter((c) => c !== searchCity)
         return [searchCity, ...filtered].slice(0, 10)
       })
       const forecast = await fetchForecastData(searchCity, unit)
@@ -82,6 +138,11 @@ function App() {
       setLoading(false)
     }
   }
+
+  useEffect(() => {
+    loadWeatherData(city)
+    setIsFavorited(favorites.includes(city))
+  }, [])
 
   const handleSearch = (searchCity) => {
     if (searchCity.trim()) loadWeatherData(searchCity)
@@ -95,218 +156,537 @@ function App() {
 
   const toggleFavorite = () => {
     if (isFavorited) {
-      setFavorites(favorites.filter(c => c !== city))
+      setFavorites(favorites.filter((c) => c !== city))
     } else {
       setFavorites([...favorites, city])
     }
     setIsFavorited(!isFavorited)
   }
 
+  const handleManualSeasonChange = (newSeason) => {
+    setIsAutoSync(false)
+    setSeason(newSeason)
+  }
+
+  const handleToggleAutoSync = () => {
+    const next = !isAutoSync
+    setIsAutoSync(next)
+    if (next && currentWeather) {
+      setSeason(determineSeason(currentWeather, unit))
+    }
+  }
+
+  const triggerAtmosphericGust = (strength = 1.6) => {
+    if (atmosphericRef.current) {
+      atmosphericRef.current.triggerGust(strength)
+    }
+  }
+
   return (
-    <div className="min-h-screen text-white" style={{ fontFamily: "'Space Grotesk', 'Inter', system-ui, sans-serif" }}>
-      {/* Animated background */}
-      <div className="animated-background" />
+    <div
+      data-season={season}
+      className="min-h-screen text-white relative transition-colors duration-700 overflow-x-hidden"
+      style={{
+        fontFamily: "'Plus Jakarta Sans', 'Outfit', 'Space Grotesk', system-ui, sans-serif",
+      }}
+    >
+      {/* Cinematic Multi-Season Particle Canvas Engine */}
+      <AtmosphericEngine
+        ref={atmosphericRef}
+        season={season}
+        windSpeed={windSpeed}
+        particleDensity={1.0}
+        interactive={true}
+      />
 
-      {/* ===== HEADER ===== */}
-      <header className="glass-panel sticky top-0 z-50 border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
-          {/* Logo & Brand */}
-          <div className="flex items-center gap-3 shrink-0 animate-slide-down">
-            <div className="relative w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden group"
-              style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%)' }}>
-              <Cloud className="w-6 h-6 text-white transition-transform group-hover:scale-110" />
-              <div className="absolute inset-0 rounded-2xl" style={{
-                background: 'linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%)',
-                animation: 'shimmer 3s infinite'
-              }} />
+      {/* Interactive Cursor Spotlight */}
+      <CursorGlow accent={activeAccent} />
+
+      {/* Floating Atmosphere Controller Dock */}
+      <WeatherDock
+        currentSeason={season}
+        onSeasonChange={handleManualSeasonChange}
+        windSpeed={windSpeed}
+        onWindSpeedChange={setWindSpeed}
+        onTriggerGust={triggerAtmosphericGust}
+        isAutoSync={isAutoSync}
+        onToggleAutoSync={handleToggleAutoSync}
+      />
+
+      {/* ===== HEADER NAVIGATION ===== */}
+      <header className="glass-panel sticky top-0 z-40 border-b border-white/10 transition-colors">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 py-2.5 sm:py-3.5">
+          {/* Desktop Navigation (sm and up) */}
+          <div className="hidden sm:flex items-center justify-between gap-4 md:gap-6">
+            {/* Brand Logo & Station Badge */}
+            <div className="flex items-center gap-3 shrink-0">
+              <div
+                className="relative w-10 h-10 rounded-2xl flex items-center justify-center overflow-hidden group shadow-lg cursor-pointer"
+                style={{
+                  background: `linear-gradient(135deg, ${activeAccent}, var(--theme-accent-secondary))`,
+                  boxShadow: `0 0 20px ${activeAccent}40`,
+                }}
+                onClick={() => triggerAtmosphericGust(2.0)}
+                title="Click to release wind gust"
+              >
+                <Cloud className="w-5 h-5 text-black transition-transform group-hover:scale-110" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer" />
+              </div>
+
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base font-extrabold font-mono tracking-tight text-white">
+                    NEXAA
+                  </span>
+                  <span
+                    className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider"
+                    style={{
+                      background: `${activeAccent}25`,
+                      color: activeAccent,
+                      border: `1px solid ${activeAccent}40`,
+                    }}
+                  >
+                    {season.toUpperCase()}
+                  </span>
+                </div>
+                <span className="text-[10px] font-mono text-white/40 tracking-wider">
+                  Atmospheric Intelligence
+                </span>
+              </div>
             </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-base sm:text-lg font-bold text-white">NEXAA</span>
-              <span className="text-[9px] sm:text-[10px] text-gray-400 font-medium">Weather</span>
+
+            {/* Desktop Search Bar */}
+            <div className="flex-1 max-w-sm md:max-w-md">
+              <SearchBar onSearch={handleSearch} />
+            </div>
+
+            {/* Desktop Action Icons */}
+            <div className="flex items-center gap-1.5 md:gap-2 shrink-0">
+              {currentWeather && (
+                <>
+                  <button
+                    onClick={handleRefresh}
+                    className={`p-2 rounded-xl hover:bg-white/10 text-white/70 hover:text-white transition-all ${
+                      refreshing ? 'animate-spin' : ''
+                    }`}
+                    title="Synchronize Live Telemetry"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={toggleFavorite}
+                    className={`p-2 rounded-xl transition-all ${
+                      isFavorited
+                        ? 'text-amber-400 bg-amber-400/15 border border-amber-400/30'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
+                    }`}
+                    title={isFavorited ? 'Remove Star' : 'Star Station'}
+                  >
+                    <Star className="w-4 h-4" fill={isFavorited ? 'currentColor' : 'none'} />
+                  </button>
+
+                  <button
+                    onClick={() => setShowComparison(true)}
+                    className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                    title="City Telemetry Comparison"
+                  >
+                    <ArrowUpDown className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => setViewMode(viewMode === 'cards' ? 'map' : 'cards')}
+                    className={`p-2 rounded-xl transition-all ${
+                      viewMode === 'map'
+                        ? 'text-white bg-white/15 border border-white/20'
+                        : 'text-white/60 hover:bg-white/10 hover:text-white'
+                    }`}
+                    title="Radar Map Toggle"
+                  >
+                    <MapPin className="w-4 h-4" />
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={() => setUnit(unit === 'metric' ? 'imperial' : 'metric')}
+                className="px-3 py-1.5 rounded-xl glass-card text-xs font-mono font-bold hover:bg-white/10 transition-all border border-white/10"
+                style={{ color: activeAccent }}
+              >
+                °{unit === 'metric' ? 'C' : 'F'}
+              </button>
+
+              <button
+                onClick={() => setShowSettings(true)}
+                className="p-2 rounded-xl hover:bg-white/10 text-white/60 hover:text-white transition-all"
+                title="System Preferences"
+              >
+                <Settings className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* Search */}
-          <div className="flex-1 max-w-xs sm:max-w-md">
-            <SearchBar onSearch={handleSearch} />
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
-            {currentWeather && (
-              <>
-                <button
-                  onClick={handleRefresh}
-                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all ${refreshing ? 'animate-spin' : ''}`}
-                  title="Refresh"
+          {/* Mobile Navigation (under sm): Two clean, uncrowded tiers */}
+          <div className="flex sm:hidden flex-col gap-2.5">
+            {/* Mobile Tier 1: Logo, Brand + Quick Controls */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center overflow-hidden cursor-pointer shadow-md"
+                  style={{
+                    background: `linear-gradient(135deg, ${activeAccent}, var(--theme-accent-secondary))`,
+                  }}
+                  onClick={() => triggerAtmosphericGust(1.8)}
                 >
-                  <RefreshCw className="w-4 sm:w-5 h-4 sm:h-5 text-gray-400 hover:text-white" />
+                  <Cloud className="w-4.5 h-4.5 text-black" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-extrabold font-mono text-white tracking-tight">
+                      NEXAA
+                    </span>
+                    <span
+                      className="px-1.5 py-0.2 rounded text-[8px] font-mono font-bold uppercase tracking-wider"
+                      style={{
+                        background: `${activeAccent}25`,
+                        color: activeAccent,
+                        border: `1px solid ${activeAccent}40`,
+                      }}
+                    >
+                      {season.toUpperCase()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Quick Action Buttons */}
+              <div className="flex items-center gap-1">
+                {currentWeather && (
+                  <>
+                    <button
+                      onClick={handleRefresh}
+                      className={`p-2 rounded-lg text-white/70 hover:text-white ${
+                        refreshing ? 'animate-spin' : ''
+                      }`}
+                      title="Refresh"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={toggleFavorite}
+                      className={`p-2 rounded-lg ${
+                        isFavorited ? 'text-amber-400' : 'text-white/60'
+                      }`}
+                      title="Star"
+                    >
+                      <Star className="w-3.5 h-3.5" fill={isFavorited ? 'currentColor' : 'none'} />
+                    </button>
+
+                    <button
+                      onClick={() => setShowComparison(true)}
+                      className="p-2 rounded-lg text-white/60"
+                      title="Compare"
+                    >
+                      <ArrowUpDown className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={() => setViewMode(viewMode === 'cards' ? 'map' : 'cards')}
+                      className={`p-2 rounded-lg ${
+                        viewMode === 'map' ? 'text-white' : 'text-white/60'
+                      }`}
+                      title="Map"
+                    >
+                      <MapPin className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
+
+                <button
+                  onClick={() => setUnit(unit === 'metric' ? 'imperial' : 'metric')}
+                  className="px-2 py-1 rounded-lg glass-card text-[11px] font-mono font-bold border border-white/10"
+                  style={{ color: activeAccent }}
+                >
+                  °{unit === 'metric' ? 'C' : 'F'}
                 </button>
 
                 <button
-                  onClick={toggleFavorite}
-                  className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl transition-all ${isFavorited ? 'text-yellow-400 bg-yellow-400/10' : 'text-gray-400 hover:bg-white/5'}`}
+                  onClick={() => setShowSettings(true)}
+                  className="p-2 rounded-lg text-white/60"
+                  title="Settings"
                 >
-                  <Star className="w-4 sm:w-5 h-4 sm:h-5" fill={isFavorited ? 'currentColor' : 'none'} />
+                  <Settings className="w-3.5 h-3.5" />
                 </button>
+              </div>
+            </div>
 
-                <button
-                  onClick={() => setViewMode(viewMode === 'cards' ? 'map' : 'cards')}
-                  className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all text-gray-400"
-                >
-                  <MapPin className="w-4 sm:w-5 h-4 sm:h-5" />
-                </button>
-              </>
-            )}
-
-            <button
-              onClick={() => setUnit(unit === 'metric' ? 'imperial' : 'metric')}
-              className="px-2.5 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl glass-panel text-xs sm:text-sm font-semibold hover:bg-white/5 transition-all"
-            >
-              °{unit === 'metric' ? 'C' : 'F'}
-            </button>
-
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 sm:p-2.5 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all text-gray-400"
-            >
-              <Settings className="w-4 sm:w-5 h-4 sm:h-5" />
-            </button>
+            {/* Mobile Tier 2: Full-width search bar */}
+            <div className="w-full">
+              <SearchBar onSearch={handleSearch} />
+            </div>
           </div>
         </div>
       </header>
 
-      {/* ===== HERO SECTION ===== */}
+      {/* ===== HERO TELEMETRY SECTION ===== */}
       {currentWeather && (
-        <section className="relative overflow-hidden">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12 lg:py-16">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 lg:gap-12 items-center">
-              {/* Left: Weather Info */}
-              <div className="animate-slide-up">
-                <div className="inline-flex items-center gap-2 mb-4">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider"
-                    style={{ background: 'rgba(59, 130, 246, 0.15)', color: '#60a5fa', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                    <span className="w-2 h-2 rounded-full bg-green-400 mr-2 animate-pulse"></span>
-                    Live Weather
-                  </span>
-                </div>
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white leading-tight mb-3 text-glow">
-                  {city}
-                </h1>
-                <p className="text-base sm:text-lg md:text-xl text-gray-300 capitalize font-medium mb-6 sm:mb-8">
-                  {currentWeather?.weather?.[0]?.description ?? 'Clear skies'}
-                </p>
-                
-                <div className="flex items-baseline gap-2 sm:gap-3 mb-6 sm:mb-8">
-                  <span className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold text-white text-gradient-blue">
-                    {Math.round(currentWeather.main.temp)}°
-                  </span>
-                  <div className="flex flex-col gap-1">
-                    <p className="text-sm text-gray-400">Feels like {Math.round(currentWeather.main.feels_like)}°</p>
-                    <p className="text-sm text-gray-500">High: {Math.round(currentWeather.main.temp_max)}° / Low: {Math.round(currentWeather.main.temp_min)}°</p>
+        <section className="relative overflow-hidden py-4 sm:py-10 md:py-14">
+          <div className="max-w-7xl mx-auto px-3.5 sm:px-6">
+            <TiltCard
+              accentColor={activeAccent}
+              className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-8 md:p-12 overflow-hidden border border-white/15"
+              style={{
+                background: 'var(--theme-glass-bg)',
+                boxShadow: `0 25px 70px -15px rgba(0,0,0,0.8), 0 0 50px ${activeAccent}18`,
+              }}
+            >
+              {/* DESKTOP HERO VIEW (md and up) */}
+              <div className="hidden md:grid md:grid-cols-12 gap-8 items-center">
+                {/* Left 7 Columns: Weather Data */}
+                <div className="md:col-span-7 space-y-6">
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    <span
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider"
+                      style={{
+                        background: `${activeAccent}18`,
+                        color: activeAccent,
+                        border: `1px solid ${activeAccent}40`,
+                      }}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Station Live · {currentWeather.sys?.country || 'INTL'}
+                    </span>
+
+                    <span className="text-xs font-mono text-white/40 uppercase tracking-widest">
+                      Telemetry Node #{currentWeather.id || '901'}
+                    </span>
+                  </div>
+
+                  <div>
+                    <h1 className="text-5xl lg:text-7xl font-extrabold tracking-tight text-white theme-text-glow leading-tight break-words mb-2">
+                      {city}
+                    </h1>
+                    <p className="text-lg lg:text-xl text-white/70 capitalize font-medium">
+                      {currentWeather?.weather?.[0]?.description ?? 'Clear Sky'}
+                    </p>
+                  </div>
+
+                  <div className="flex items-baseline gap-4">
+                    <span className="text-7xl lg:text-9xl font-extrabold font-mono tracking-tighter text-white">
+                      {Math.round(currentWeather.main.temp)}°
+                    </span>
+                    <div className="space-y-1 font-mono">
+                      <p className="text-sm text-white/60">
+                        Feels like{' '}
+                        <span className="font-bold text-white">
+                          {Math.round(currentWeather.main.feels_like)}°
+                        </span>
+                      </p>
+                      <p className="text-xs text-white/40">
+                        Peak: {Math.round(currentWeather.main.temp_max)}° · Floor:{' '}
+                        {Math.round(currentWeather.main.temp_min)}°
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-4 gap-2.5 pt-2">
+                    <QuickMetric
+                      label="Moisture"
+                      value={`${currentWeather.main.humidity}%`}
+                      emoji="💧"
+                    />
+                    <QuickMetric
+                      label="Wind"
+                      value={`${currentWeather.wind.speed.toFixed(1)} ${speedUnit}`}
+                      emoji="💨"
+                    />
+                    <QuickMetric
+                      label="Barometer"
+                      value={`${currentWeather.main.pressure} mb`}
+                      emoji="🔽"
+                    />
+                    <QuickMetric
+                      label="Visibility"
+                      value={`${(currentWeather.visibility / 1000).toFixed(1)} km`}
+                      emoji="👁️"
+                    />
                   </div>
                 </div>
 
-                {/* Quick Stats */}
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <QuickStat icon="💧" label="Humidity" value={`${currentWeather.main.humidity}%`} />
-                  <QuickStat icon="💨" label="Wind" value={`${currentWeather.wind.speed.toFixed(1)} m/s`} />
-                  <QuickStat icon="🔽" label="Pressure" value={`${currentWeather.main.pressure} mb`} />
-                  <QuickStat icon="👁️" label="Visibility" value={`${(currentWeather.visibility / 1000).toFixed(1)} km`} />
+                {/* Right 5 Columns: Large Floating 3D Orb */}
+                <div className="md:col-span-5 flex justify-center items-center">
+                  <div className="relative w-64 h-64 lg:w-72 lg:h-72 flex items-center justify-center">
+                    <div
+                      className="absolute inset-0 rounded-full blur-2xl pointer-events-none opacity-50"
+                      style={{
+                        background: `radial-gradient(circle, ${activeAccent}40 0%, transparent 70%)`,
+                      }}
+                    />
+                    <div
+                      className="absolute inset-2 rounded-full border border-dashed opacity-25 animate-spin pointer-events-none"
+                      style={{
+                        borderColor: activeAccent,
+                        animationDuration: '24s',
+                      }}
+                    />
+                    <div className="text-8xl lg:text-[135px] weather-icon-hero cursor-pointer transition-transform hover:scale-110">
+                      {getWeatherIcon(currentWeather.weather[0].icon)}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Right: Large Weather Icon */}
-              <div className="flex justify-center items-center animate-drift">
-                <div className="relative w-48 h-48 sm:w-56 sm:h-56 md:w-64 md:h-64 flex items-center justify-center">
-                  <div className="absolute inset-0 rounded-full"
+              {/* MOBILE HERO VIEW (< md): Compact, punchy Apple Weather layout */}
+              <div className="block md:hidden space-y-4">
+                {/* Station Live Badge */}
+                <div className="flex items-center justify-between">
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider"
                     style={{
-                      background: `radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%)`,
-                      animation: 'pulse 4s ease-in-out infinite'
-                    }} />
-                  <div className="text-7xl sm:text-8xl md:text-9xl weather-icon-lg select-none">
-                    {getWeatherIcon(currentWeather.weather[0].icon)}
+                      background: `${activeAccent}18`,
+                      color: activeAccent,
+                      border: `1px solid ${activeAccent}40`,
+                    }}
+                  >
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    Live · {currentWeather.sys?.country || 'INTL'}
+                  </span>
+                  <span className="text-[10px] font-mono text-white/40">
+                    LAT: {currentWeather.coord?.lat?.toFixed(1)}° · LON: {currentWeather.coord?.lon?.toFixed(1)}°
+                  </span>
+                </div>
+
+                {/* City Title */}
+                <div>
+                  <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white theme-text-glow leading-tight break-words">
+                    {city}
+                  </h1>
+                  <p className="text-xs sm:text-sm text-white/70 capitalize font-medium">
+                    {currentWeather?.weather?.[0]?.description ?? 'Clear Sky'}
+                  </p>
+                </div>
+
+                {/* Compact Temperature + Weather Icon Flex Row */}
+                <div className="flex items-center justify-between py-1">
+                  <div>
+                    <div className="text-6xl sm:text-7xl font-extrabold font-mono tracking-tighter text-white">
+                      {Math.round(currentWeather.main.temp)}°
+                    </div>
+                    <div className="space-y-0.5 font-mono text-xs text-white/60 mt-1">
+                      <p>
+                        Feels like <span className="font-bold text-white">{Math.round(currentWeather.main.feels_like)}°</span>
+                      </p>
+                      <p className="text-[11px] text-white/40">
+                        H: {Math.round(currentWeather.main.temp_max)}° · L: {Math.round(currentWeather.main.temp_min)}°
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Compact Weather Icon Orb */}
+                  <div className="relative w-24 h-24 sm:w-28 sm:h-28 flex items-center justify-center shrink-0">
+                    <div
+                      className="absolute inset-0 rounded-full blur-xl pointer-events-none opacity-40"
+                      style={{
+                        background: `radial-gradient(circle, ${activeAccent}50 0%, transparent 70%)`,
+                      }}
+                    />
+                    <div className="text-6xl sm:text-7xl weather-icon-hero">
+                      {getWeatherIcon(currentWeather.weather[0].icon)}
+                    </div>
                   </div>
                 </div>
+
+                {/* Quick 2x2 Sensor Metrics Grid */}
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <QuickMetric
+                    label="Moisture"
+                    value={`${currentWeather.main.humidity}%`}
+                    emoji="💧"
+                  />
+                  <QuickMetric
+                    label="Wind Vector"
+                    value={`${currentWeather.wind.speed.toFixed(1)} ${speedUnit}`}
+                    emoji="💨"
+                  />
+                  <QuickMetric
+                    label="Barometer"
+                    value={`${currentWeather.main.pressure} mb`}
+                    emoji="🔽"
+                  />
+                  <QuickMetric
+                    label="Visibility"
+                    value={`${(currentWeather.visibility / 1000).toFixed(1)} km`}
+                    emoji="👁️"
+                  />
+                </div>
               </div>
-            </div>
+            </TiltCard>
           </div>
         </section>
       )}
 
-      {/* ===== MAIN CONTENT ===== */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 pb-12 sm:pb-16 lg:pb-20">
-        {/* Error Alert */}
+      {/* ===== MAIN CONTENT GRID ===== */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-3.5 sm:px-6 pb-20">
+        {/* Error Notification */}
         {error && (
-          <div className="mb-8 p-6 rounded-2xl glass-panel border border-red-500/30 animate-slide-down"
-            style={{ background: 'rgba(239, 68, 68, 0.08)' }}>
-            <p className="text-red-300 font-medium">⚠️ {error}</p>
+          <div
+            className="mb-6 p-4 sm:p-5 rounded-2xl sm:rounded-3xl glass-card border border-red-500/40 animate-slide-down"
+            style={{ background: 'rgba(239, 68, 68, 0.1)' }}
+          >
+            <p className="text-red-300 font-mono text-xs sm:text-sm">⚠️ {error}</p>
           </div>
         )}
 
-        {/* Loading State */}
+        {/* Loading State Skeleton */}
         {loading && !currentWeather ? (
           <LoadingSkeleton />
         ) : currentWeather ? (
           <>
-            {/* Alerts Banner */}
-            {showAlerts && (
-              <div className="animate-slide-down mb-8">
-                <AlertsBanner weather={currentWeather} />
-              </div>
-            )}
+            {/* Meteorological Advisories Banner */}
+            {showAlerts && <AlertsBanner weather={currentWeather} />}
 
             {viewMode === 'cards' ? (
-              <div className="space-y-8">
-                {/* Hourly Forecast */}
+              <div className="space-y-6 sm:space-y-8">
+                {/* 24-Hour Telemetry Carousel */}
                 {forecastData && (
-                  <div className="animate-scale-in" style={{ animationDelay: '100ms' }}>
-                    <HourlyForecastCarousel data={forecastData.list.slice(0, 12)} unit={unit} />
-                  </div>
+                  <HourlyForecastCarousel
+                    data={forecastData.list.slice(0, 16)}
+                    unit={unit}
+                  />
                 )}
 
-                {/* Main Grid - Balanced 2 Columns */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                  {/* Left Column */}
-                  <div className="space-y-6">
-                    {/* Temperature Trends */}
+                {/* Symmetrical High-Performance Grid */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+                  {/* Left Column: Trajectories & Metrics */}
+                  <div className="space-y-6 sm:space-y-8">
                     {forecastData && (
-                      <div className="animate-scale-in" style={{ animationDelay: '200ms' }}>
-                        <TemperatureTrends data={forecastData} unit={unit} />
-                      </div>
+                      <TemperatureTrends data={forecastData} unit={unit} />
                     )}
 
-                    {/* Detailed Weather */}
-                    <div className="animate-scale-in" style={{ animationDelay: '300ms' }}>
-                      <DetailedWeather data={currentWeather} unit={unit} />
-                    </div>
+                    <DetailedWeather data={currentWeather} unit={unit} />
 
-                    {/* Weekly Forecast */}
                     {forecastData && (
-                      <div className="animate-scale-in" style={{ animationDelay: '400ms' }}>
-                        <WeeklyForecast data={forecastData} unit={unit} />
-                      </div>
+                      <WeeklyForecast data={forecastData} unit={unit} />
                     )}
                   </div>
 
-                  {/* Right Column */}
-                  <div className="space-y-6">
-                    {/* Enhanced Details */}
-                    <div className="animate-scale-in" style={{ animationDelay: '200ms' }}>
-                      <EnhancedDetails data={currentWeather} unit={unit} city={city} forecastData={forecastData} />
-                    </div>
+                  {/* Right Column: Tactical Intelligence, Air Purity, History */}
+                  <div className="space-y-6 sm:space-y-8">
+                    <EnhancedDetails
+                      data={currentWeather}
+                      unit={unit}
+                      city={city}
+                      forecastData={forecastData}
+                    />
 
-                    {/* Air Quality */}
-                    {aqi && (
-                      <div className="animate-scale-in" style={{ animationDelay: '300ms' }}>
-                        <AirQualityIndex aqi={aqi} />
-                      </div>
-                    )}
+                    {aqi && <AirQualityIndex aqi={aqi} />}
 
-                    {/* Recent Searches */}
-                    <div className="animate-scale-in" style={{ animationDelay: '500ms' }}>
-                      <RecentSearches onSelect={handleSearch} recentSearches={recentSearches} favorites={favorites} />
-                    </div>
+                    <RecentSearches
+                      onSelect={handleSearch}
+                      recentSearches={recentSearches}
+                      favorites={favorites}
+                    />
                   </div>
                 </div>
               </div>
@@ -320,11 +700,13 @@ function App() {
       </main>
 
       {/* ===== FOOTER ===== */}
-      <footer className="glass-panel border-t border-white/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 text-center">
-          <p className="text-gray-400 text-xs font-medium tracking-wide">
-            Nimbus Weather · Powered by OpenWeatherMap
-          </p>
+      <footer className="glass-panel border-t border-white/10 mt-auto">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-5 sm:py-6 flex flex-col sm:flex-row items-center justify-between gap-2.5 sm:gap-3 text-[11px] sm:text-xs font-mono text-white/40 text-center sm:text-left">
+          <p>NEXAA Weather Intelligence · Real-Time Atmospheric Telemetry</p>
+          <div className="flex items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>OpenWeatherMap Global Mesh</span>
+          </div>
         </div>
       </footer>
 
@@ -349,20 +731,21 @@ function App() {
         currentWeather={currentWeather}
         unit={unit}
         onLoadCity={async (searchCity) => {
-          const weather = await fetchWeatherData(searchCity, unit)
-          return weather
+          return await fetchWeatherData(searchCity, unit)
         }}
       />
     </div>
   )
 }
 
-function QuickStat({ icon, label, value }) {
+function QuickMetric({ label, value, emoji }) {
   return (
-    <div className="glass-panel p-3 sm:p-4 rounded-lg sm:rounded-xl hover:bg-white/5 transition-all">
-      <p className="text-xl sm:text-2xl mb-1">{icon}</p>
-      <p className="text-[10px] sm:text-[11px] text-gray-400 font-semibold uppercase tracking-wide">{label}</p>
-      <p className="text-sm sm:text-base font-bold text-white">{value}</p>
+    <div className="p-2 sm:p-3 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 transition-all hover:bg-white/10 hover:border-white/15">
+      <div className="flex items-center gap-1 mb-0.5 text-xs sm:text-sm">{emoji}</div>
+      <p className="text-[8px] sm:text-[9px] font-mono font-bold uppercase tracking-wider text-white/40">
+        {label}
+      </p>
+      <p className="text-xs sm:text-base font-bold font-mono text-white mt-0.5 truncate">{value}</p>
     </div>
   )
 }

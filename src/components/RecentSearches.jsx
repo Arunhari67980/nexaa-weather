@@ -4,31 +4,27 @@ export default function RecentSearches({ onSelect, recentSearches = [], favorite
   if (recentSearches.length === 0 && favorites.length === 0) return null
 
   return (
-    <div className="glass-card rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 overflow-hidden">
+    <div className="glass-card rounded-3xl p-5 sm:p-7 overflow-hidden">
+      <div className="top-edge-flare" />
+
       {/* Favorites */}
       {favorites.length > 0 && (
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-1 h-6 rounded-full"
-              style={{ background: 'linear-gradient(180deg, #fbbf24, #f59e0b)' }} />
-            <h3 className="text-base font-bold text-white uppercase tracking-tight">⭐ Favorites</h3>
+        <div className="mb-6">
+          <div className="flex items-center gap-2.5 mb-3">
+            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+              Starred Stations
+            </h2>
           </div>
-          <div className="space-y-2">
+          <div className="flex flex-wrap gap-2">
             {favorites.map((city, idx) => (
               <button
                 key={idx}
                 onClick={() => onSelect(city)}
-                className="w-full flex items-center justify-between px-4 py-3 rounded-2xl transition-all hover:scale-105 group"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)',
-                  border: '1px solid rgba(251, 191, 36, 0.2)'
-                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-400/10 border border-amber-400/30 text-amber-200 hover:bg-amber-400/20 transition-all flex items-center gap-1.5"
               >
-                <div className="flex items-center gap-3">
-                  <Star className="w-4 h-4 text-amber-300" fill="currentColor" />
-                  <span className="text-sm font-semibold text-amber-200">{city}</span>
-                </div>
-                <MapPin className="w-4 h-4 text-amber-300 group-hover:translate-x-1 transition-transform" />
+                <span>⭐</span>
+                <span>{city}</span>
               </button>
             ))}
           </div>
@@ -38,27 +34,21 @@ export default function RecentSearches({ onSelect, recentSearches = [], favorite
       {/* Recent Searches */}
       {recentSearches.length > 0 && (
         <div>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="w-1 h-6 rounded-full"
-              style={{ background: 'linear-gradient(180deg, rgba(59, 130, 246, 0.6), rgba(6, 182, 212, 0.6))' }} />
-            <h3 className="text-base font-bold text-white uppercase tracking-tight">🕐 Recent Searches</h3>
+          <div className="flex items-center gap-2.5 mb-3">
+            <Clock className="w-3.5 h-3.5 text-white/50" />
+            <h2 className="text-xs font-mono font-bold uppercase tracking-wider text-white">
+              Recent Exploration
+            </h2>
           </div>
-          <div className="grid grid-cols-1 gap-2">
+          <div className="flex flex-wrap gap-2">
             {recentSearches.slice(0, 8).map((city, idx) => (
               <button
                 key={idx}
                 onClick={() => onSelect(city)}
-                className="flex items-center justify-between px-4 py-3 rounded-2xl text-sm font-medium transition-all hover:scale-105 group"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.04)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)'
-                }}
+                className="px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 hover:border-white/20 transition-all flex items-center gap-1.5"
               >
-                <div className="flex items-center gap-3">
-                  <Clock className="w-4 h-4 text-gray-400 group-hover:text-blue-400 transition-colors" />
-                  <span className="text-gray-300 group-hover:text-white transition-colors">{city}</span>
-                </div>
-                <MapPin className="w-4 h-4 text-gray-500 group-hover:text-blue-400 transition-colors group-hover:translate-x-1" />
+                <MapPin className="w-3 h-3 text-white/40" />
+                <span>{city}</span>
               </button>
             ))}
           </div>
