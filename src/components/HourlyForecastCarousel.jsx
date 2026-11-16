@@ -37,7 +37,7 @@ export default function HourlyForecastCarousel({ data, unit }) {
             return (
               <div
                 key={idx}
-                className="snap-start shrink-0 rounded-2xl p-3 sm:p-4 text-center transition-all duration-300 group hover:-translate-y-1 cursor-pointer relative overflow-hidden"
+                className="snap-start shrink-0 rounded-2xl p-3 sm:p-4 text-center transition-all duration-300 group sm:hover:-translate-y-1 cursor-pointer relative overflow-hidden"
                 style={{
                   minWidth: '96px',
                   maxWidth: '120px',
@@ -67,7 +67,7 @@ export default function HourlyForecastCarousel({ data, unit }) {
                   {isNow ? '● Now' : hour}
                 </p>
 
-                <div className="text-2xl sm:text-4xl my-1.5 sm:my-2.5 weather-icon group-hover:scale-115 transition-transform">
+                <div className="text-2xl sm:text-4xl my-1.5 sm:my-2.5 weather-icon sm:group-hover:scale-115 transition-transform">
                   {getWeatherIcon(item.weather[0].icon)}
                 </div>
 

@@ -201,8 +201,13 @@ export default function WeatherDock({
         >
           <span className="text-xs sm:text-sm">{activeSeasonData.emoji}</span>
           <span className="text-[11px] sm:text-xs font-bold text-white tracking-wide">
-            {isAutoSync ? 'Auto' : activeSeasonData.label}
+            {activeSeasonData.label}
           </span>
+          {isAutoSync && (
+            <span className="px-1 py-0.5 rounded text-[8px] font-mono font-bold uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+              Auto
+            </span>
+          )}
           <span className="w-1.5 h-1.5 rounded-full" style={{ background: activeSeasonData.accent }} />
           {isExpanded ? (
             <ChevronDown className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white/60" />

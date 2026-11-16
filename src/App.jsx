@@ -57,16 +57,18 @@ function App() {
   const [showComparison, setShowComparison] = useState(false)
 
   // Atmospheric Engine States
-  const [season, setSeason] = useState('autumn')
+  const [season, setSeason] = useState('spring')
   const [windSpeed, setWindSpeed] = useState('brisk')
   const [isAutoSync, setIsAutoSync] = useState(true)
+  const hasUserSelectedLocation = useRef(false)
+  const isFirstUnitMount = useRef(true)
   const atmosphericRef = useRef(null)
 
   const tempSymbol = unit === 'metric' ? '°C' : '°F'
   const speedUnit = unit === 'metric' ? 'm/s' : 'mph'
-  const activeAccent = seasonAccents[season] || '#f0a352'
+  const activeAccent = seasonAccents[season] || '#f472b6'
 
-  // Initialize Lenis smooth scroll
+  // Initialize smooth scroll (Desktop only - native smooth scrolling on mobile)
   useEffect(() => {
     initSmoothScroll()
     return () => {
@@ -86,6 +88,15 @@ function App() {
   useEffect(() => { localStorage.setItem('theme', theme) }, [theme])
   useEffect(() => { localStorage.setItem('recentSearches', JSON.stringify(recentSearches)) }, [recentSearches])
   useEffect(() => { localStorage.setItem('favoriteSearches', JSON.stringify(favorites)) }, [favorites])
+
+  // Re-fetch when unit changes
+  useEffect(() => {
+    if (isFirstUnitMount.current) {
+      isFirstUnitMount.current = false
+      return
+    }
+    loadWeatherData(city, hasUserSelectedLocation.current)
+  }, [unit])
 
   // Determine season automatically from weather telemetry
   const determineSeason = (weatherData, currentUnit) => {
@@ -110,7 +121,7 @@ function App() {
     return 'autumn'
   }
 
-  const loadWeatherData = async (searchCity) => {
+  const loadWeatherData = async (searchCity, isUserSelection = false) => {
     setLoading(true)
     setError(null)
     try {
@@ -119,7 +130,18 @@ function App() {
       setCity(searchCity)
       setIsFavorited(favorites.includes(searchCity))
 
-      if (isAutoSync) {
+      // Keep spring as default season when user visits the site.
+      // Once the user selects a location, automatically transition season to that location's weather.
+      if (isUserSelection) {
+        hasUserSelectedLocation.current = true
+        if (isAutoSync) {
+          const detected = determineSeason(weather, unit)
+          setSeason(detected)
+        }
+      } else if (!hasUserSelectedLocation.current) {
+        // Enforce Spring as the default visual experience on initial site visit
+        setSeason('spring')
+      } else if (isAutoSync) {
         const detected = determineSeason(weather, unit)
         setSeason(detected)
       }
@@ -140,17 +162,20 @@ function App() {
   }
 
   useEffect(() => {
-    loadWeatherData(city)
+    // Initial visit: loads default city telemetry while preserving Spring as default season
+    loadWeatherData(city, false)
     setIsFavorited(favorites.includes(city))
   }, [])
 
   const handleSearch = (searchCity) => {
-    if (searchCity.trim()) loadWeatherData(searchCity)
+    if (searchCity && searchCity.trim()) {
+      loadWeatherData(searchCity.trim(), true)
+    }
   }
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    await loadWeatherData(city)
+    await loadWeatherData(city, hasUserSelectedLocation.current)
     setRefreshing(false)
   }
 

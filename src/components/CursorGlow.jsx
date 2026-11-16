@@ -1,13 +1,19 @@
 import { useEffect, useRef, useState } from 'react'
 
-export default function CursorGlow({ accent = '#f0a352' }) {
+export default function CursorGlow({ accent = '#f472b6' }) {
   const glowRef = useRef(null)
   const [visible, setVisible] = useState(false)
-  const pos = useRef({ x: -200, y: -200, targetX: -200, targetY: -200 })
+  const pos = useRef({ x: -250, y: -250, targetX: -250, targetY: -250 })
 
   useEffect(() => {
-    // Disable on touch devices
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) return
+    // Disable completely on mobile screens or touch devices to eliminate background rAF overhead
+    const isTouchOrMobile =
+      typeof window === 'undefined' ||
+      window.innerWidth < 768 ||
+      'ontouchstart' in window ||
+      (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+
+    if (isTouchOrMobile) return
 
     let animFrame = null
 
@@ -33,12 +39,12 @@ export default function CursorGlow({ accent = '#f0a352' }) {
       animFrame = requestAnimationFrame(render)
     }
 
-    window.addEventListener('mousemove', handleMouseMove, { passive: true })
+    window.addEventListener('mousemove', handlePointerMove, { passive: true })
     document.addEventListener('mouseleave', handleMouseLeave)
     animFrame = requestAnimationFrame(render)
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove)
+      window.removeEventListener('mousemove', handlePointerMove)
       document.removeEventListener('mouseleave', handleMouseLeave)
       if (animFrame) cancelAnimationFrame(animFrame)
     }

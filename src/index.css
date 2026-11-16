@@ -8,13 +8,13 @@
    ============================================ */
 
 :root {
-  --theme-accent: #f0a352;
-  --theme-accent-secondary: #c96f3b;
-  --theme-glow: rgba(240, 163, 82, 0.35);
-  --theme-bg: #14100e;
-  --theme-bg-gradient: radial-gradient(ellipse 90% 65% at 50% -10%, rgba(201, 111, 59, 0.22) 0%, rgba(20, 16, 14, 0.98) 70%, #0d0a09 100%);
-  --theme-glass-bg: rgba(22, 17, 14, 0.82);
-  --theme-glass-border: rgba(240, 163, 82, 0.22);
+  --theme-accent: #f472b6;
+  --theme-accent-secondary: #34d399;
+  --theme-glow: rgba(244, 114, 182, 0.35);
+  --theme-bg: #100b14;
+  --theme-bg-gradient: radial-gradient(ellipse 90% 65% at 50% -10%, rgba(244, 114, 182, 0.2) 0%, rgba(18, 12, 22, 0.98) 70%, #0c0810 100%);
+  --theme-glass-bg: rgba(22, 14, 26, 0.82);
+  --theme-glass-border: rgba(244, 114, 182, 0.25);
 
   font-family: 'Plus Jakarta Sans', 'Outfit', 'Space Grotesk', system-ui, -apple-system, sans-serif;
   color-scheme: dark;
@@ -96,12 +96,19 @@ body {
   transition: background 0.8s ease;
 }
 
+@media (max-width: 768px) {
+  body {
+    background-attachment: scroll; /* Eliminates mobile scroll redraw bottlenecks */
+  }
+}
+
 /* Ambient Northern Aura Drift */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
+  transform: translateZ(0);
   background:
     radial-gradient(ellipse 70% 50% at 15% 10%, var(--theme-glow) 0%, transparent 60%),
     radial-gradient(ellipse 60% 45% at 85% 20%, rgba(255, 255, 255, 0.03) 0%, transparent 55%),

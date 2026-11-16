@@ -91,7 +91,7 @@ export default function WeeklyForecast({ data, unit }) {
               </div>
 
               {/* Weather Icon */}
-              <div className="text-xl sm:text-3xl shrink-0 weather-icon group-hover:scale-120 transition-transform">
+              <div className="text-xl sm:text-3xl shrink-0 weather-icon sm:group-hover:scale-120 transition-transform">
                 {getWeatherIcon(day.icon)}
               </div>
 

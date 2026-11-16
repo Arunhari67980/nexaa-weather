@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { Search, X, Loader, MapPin } from 'lucide-react'
-import { searchCities } from '../api/weatherApi'
+import { Search, X, Loader, MapPin, Navigation } from 'lucide-react'
+import { searchCities, getUserLocation, getCityFromCoords } from '../api/weatherApi'
 
 export default function SearchBar({ onSearch }) {
   const [query, setQuery] = useState('')
@@ -8,6 +8,7 @@ export default function SearchBar({ onSearch }) {
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIdx, setSelectedIdx] = useState(-1)
   const [loading, setLoading] = useState(false)
+  const [locating, setLocating] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
   const inputRef = useRef(null)
   const wrapperRef = useRef(null)
@@ -55,6 +56,22 @@ export default function SearchBar({ onSearch }) {
     setIsFocused(false)
   }
 
+  const handleUseCurrentLocation = async () => {
+    if (locating) return
+    setLocating(true)
+    try {
+      const coords = await getUserLocation()
+      const cityName = await getCityFromCoords(coords.lat, coords.lon)
+      if (cityName && cityName !== 'Unknown') {
+        submit(cityName)
+      }
+    } catch (err) {
+      console.warn('Geolocation lookup notice:', err)
+    } finally {
+      setLocating(false)
+    }
+  }
+
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -77,7 +94,7 @@ export default function SearchBar({ onSearch }) {
     <div ref={wrapperRef} className="relative w-full">
       {/* Search Input Box */}
       <div
-        className="glass-card flex items-center gap-2.5 sm:gap-3 rounded-2xl px-3.5 sm:px-4 py-2 sm:py-2.5 transition-all duration-300"
+        className="glass-card flex items-center gap-2 sm:gap-2.5 rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 transition-all duration-300"
         style={{
           borderColor: isFocused ? 'var(--theme-accent)' : 'var(--theme-glass-border)',
           boxShadow: isFocused ? '0 0 25px var(--theme-glow)' : 'none',
@@ -98,7 +115,7 @@ export default function SearchBar({ onSearch }) {
             if (suggestions.length > 0) setShowSuggestions(true)
           }}
           placeholder="Search world cities..."
-          className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-white/35 font-medium focus:outline-none"
+          className="flex-1 bg-transparent text-sm sm:text-base text-white placeholder-white/35 font-medium focus:outline-none min-w-0"
         />
         {loading && (
           <Loader
@@ -113,11 +130,22 @@ export default function SearchBar({ onSearch }) {
               setSuggestions([])
               setShowSuggestions(false)
             }}
-            className="p-1 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors"
+            className="p-1 hover:bg-white/10 rounded-lg text-white/40 hover:text-white transition-colors shrink-0"
+            title="Clear text"
           >
             <X className="w-3.5 h-3.5" />
           </button>
         )}
+        <button
+          onClick={handleUseCurrentLocation}
+          disabled={locating}
+          className={`p-1 hover:bg-white/10 rounded-lg transition-colors shrink-0 ${
+            locating ? 'text-amber-400' : 'text-white/45 hover:text-white'
+          }`}
+          title="Detect my current location"
+        >
+          <Navigation className={`w-3.5 h-3.5 ${locating ? 'animate-spin' : ''}`} />
+        </button>
       </div>
 
       {/* Suggestions Dropdown */}

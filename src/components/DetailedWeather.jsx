@@ -40,7 +40,7 @@ export default function DetailedWeather({ data, unit }) {
         {metrics.map((m, idx) => (
           <div
             key={idx}
-            className="rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-white/20 hover:-translate-y-0.5 group relative overflow-hidden"
+            className="rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-300 hover:border-white/20 sm:hover:-translate-y-0.5 group relative overflow-hidden"
             style={{
               background: 'rgba(255, 255, 255, 0.025)',
               border: '1px solid rgba(255, 255, 255, 0.05)',
@@ -48,7 +48,7 @@ export default function DetailedWeather({ data, unit }) {
           >
             <div className="flex items-center justify-between mb-2 sm:mb-3">
               <div
-                className="p-1.5 sm:p-2 rounded-xl transition-transform group-hover:scale-110"
+                className="p-1.5 sm:p-2 rounded-xl transition-transform sm:group-hover:scale-110"
                 style={{
                   background: 'rgba(255, 255, 255, 0.05)',
                   color: 'var(--theme-accent)',

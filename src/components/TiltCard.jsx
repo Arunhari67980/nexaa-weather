@@ -18,13 +18,20 @@ export default function TiltCard({
     glareY: 50,
     isHovered: false,
   })
-  const [isTouch, setIsTouch] = useState(false)
+  const [isTouch, setIsTouch] = useState(true)
 
   useEffect(() => {
-    // Detect touch device
-    if (typeof window !== 'undefined' && ('ontouchstart' in window || navigator.maxTouchPoints > 0)) {
-      setIsTouch(true)
+    // Only enable 3D tilt on desktop with fine mouse pointer
+    const checkTouch = () => {
+      const isMobileOrTouch =
+        window.innerWidth < 768 ||
+        'ontouchstart' in window ||
+        (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0)
+      setIsTouch(isMobileOrTouch)
     }
+    checkTouch()
+    window.addEventListener('resize', checkTouch, { passive: true })
+    return () => window.removeEventListener('resize', checkTouch)
   }, [])
 
   const handleMouseMove = (e) => {
@@ -67,12 +74,12 @@ export default function TiltCard({
       onClick={onClick}
       className={`relative group rounded-3xl transition-shadow duration-500 ${className}`}
       style={{
-        transformStyle: 'preserve-3d',
+        transformStyle: isTouch ? 'flat' : 'preserve-3d',
         transform: !isTouch && tilt.isHovered
           ? `perspective(1000px) rotateX(${tilt.rotateX}deg) rotateY(${tilt.rotateY}deg) translateZ(4px)`
-          : 'perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)',
+          : 'none',
         transition: tilt.isHovered ? 'transform 0.1s ease-out' : 'transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        willChange: tilt.isHovered ? 'transform' : 'auto',
+        willChange: !isTouch && tilt.isHovered ? 'transform' : 'auto',
         ...style,
       }}
       {...rest}
@@ -83,11 +90,11 @@ export default function TiltCard({
         style={{
           background: `linear-gradient(90deg, transparent 0%, ${accentColor} 50%, transparent 100%)`,
           opacity: tilt.isHovered ? 0.95 : 0.45,
-          boxShadow: tilt.isHovered ? `0 0 12px ${accentColor}` : 'none',
+          boxShadow: !isTouch && tilt.isHovered ? `0 0 12px ${accentColor}` : 'none',
         }}
       />
 
-      {/* Dynamic Specular Glare Spotlight */}
+      {/* Dynamic Specular Glare Spotlight (Desktop only) */}
       {glare && !isTouch && tilt.isHovered && (
         <div
           className="absolute inset-0 rounded-3xl pointer-events-none transition-opacity duration-300 z-10"
