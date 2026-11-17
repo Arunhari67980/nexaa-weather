@@ -1,13 +1,11 @@
 import { getWeatherIcon } from '../api/weatherApi'
 
-export default function WeeklyForecast({ data, unit }) {
+export default function WeeklyForecast({ data }) {
   if (!data || !data.list) return null
-
-  const tempSymbol = unit === 'metric' ? '°C' : '°F'
 
   // Group forecasts by day
   const dailyForecasts = data.list.reduce((acc, item) => {
-    const date = new Date(item.dt * 1000).toLocaleDateString('en-US', {
+    const date = new Date((item.dt || 0) * 1000).toLocaleDateString('en-US', {
       weekday: 'short',
       month: 'short',
       day: 'numeric',
@@ -15,19 +13,22 @@ export default function WeeklyForecast({ data, unit }) {
     if (!acc[date]) {
       acc[date] = { temps: [], icons: [], weather: item.weather }
     }
-    acc[date].temps.push(item.main.temp)
-    acc[date].icons.push(item.weather[0].icon)
+    if (item.main?.temp !== undefined) {
+      acc[date].temps.push(item.main.temp)
+    }
+    const icon = item.weather?.[0]?.icon || '01d'
+    acc[date].icons.push(icon)
     return acc
   }, {})
 
   const forecasts = Object.entries(dailyForecasts)
     .slice(0, 7)
-    .map(([date, data]) => ({
+    .map(([date, dayData]) => ({
       date,
-      high: Math.round(Math.max(...data.temps)),
-      low: Math.round(Math.min(...data.temps)),
-      icon: data.icons[Math.floor(data.icons.length / 2)],
-      weather: data.weather,
+      high: dayData.temps.length > 0 ? Math.round(Math.max(...dayData.temps)) : 20,
+      low: dayData.temps.length > 0 ? Math.round(Math.min(...dayData.temps)) : 10,
+      icon: dayData.icons[Math.floor(dayData.icons.length / 2)] || '01d',
+      weather: dayData.weather,
     }))
 
   return (

@@ -1,6 +1,6 @@
 // Activity suggestions based on weather conditions
-export const getActivitySuggestions = (weather, temp) => {
-  const mainCondition = weather[0].main.toLowerCase()
+export const getActivitySuggestions = (weather, temp = 20) => {
+  const mainCondition = weather?.[0]?.main?.toLowerCase() || 'clear'
 
   const activities = {
     sunny: ['🏃 Go for a run', '🚴 Ride your bike', '🏖️ Go to the beach', '⛳ Play golf', '🧗 Hiking', '🏀 Play sports'],
@@ -37,8 +37,8 @@ export const getActivitySuggestions = (weather, temp) => {
 }
 
 // Outfit recommendations
-export const getOutfitRecommendation = (temp, weather, humidity) => {
-  const mainCondition = weather[0].main.toLowerCase()
+export const getOutfitRecommendation = (temp = 20, weather, humidity = 50) => {
+  const mainCondition = weather?.[0]?.main?.toLowerCase() || 'clear'
 
   let outfit = {
     top: '',
@@ -137,7 +137,7 @@ export const exportWeatherAsCSV = (data, city) => {
     data.main.humidity,
     data.wind.speed,
     data.main.pressure,
-    data.weather[0].description,
+    data.weather?.[0]?.description || 'Clear',
   ]
   
   const csv = 'City,Date/Time,Temperature,Feels Like,Humidity,Wind Speed,Pressure,Condition\n' +

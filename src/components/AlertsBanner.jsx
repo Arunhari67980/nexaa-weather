@@ -1,21 +1,61 @@
 import { AlertTriangle, AlertCircle } from 'lucide-react'
 
-export default function AlertsBanner({ weather }) {
+export default function AlertsBanner({
+  weather,
+  alertSettings = { freeze: true, wind: true, rain: true, heat: true, visibility: true },
+}) {
+  const settings = alertSettings || { freeze: true, wind: true, rain: true, heat: true, visibility: true }
+
   const generateAlerts = () => {
     const alerts = []
     if (!weather) return alerts
 
-    if (weather.main.temp < 0) {
-      alerts.push({ type: 'freeze', message: 'Sub-Zero Freeze Advisory — Frostbite precaution in effect.', severity: 'warning' })
+    const mainCond = weather.weather?.[0]?.main?.toLowerCase() || ''
+    const descCond = weather.weather?.[0]?.description?.toLowerCase() || ''
+    const temp = weather.main?.temp
+    const speed = weather.wind?.speed ?? 0
+    const visibility = weather.visibility ?? 10000
+
+    if (settings.freeze && temp !== undefined && temp < 0) {
+      alerts.push({
+        type: 'freeze',
+        message: '❄️ Sub-Zero Freeze Advisory — Frostbite precaution in effect; watch for ice on roads.',
+        severity: 'warning',
+      })
     }
-    if (weather.wind.speed > 10) {
-      alerts.push({ type: 'wind', message: 'High Velocity Gale Advisory — Secure exterior equipment and objects.', severity: 'warning' })
+    if (settings.wind && speed > 10) {
+      alerts.push({
+        type: 'wind',
+        message: '💨 High Velocity Gale Advisory — Strong winds detected; secure exterior equipment.',
+        severity: 'warning',
+      })
     }
-    if (weather.visibility < 1000) {
-      alerts.push({ type: 'visibility', message: 'Low Visibility Dense Fog Alert — Reduce travel speeds.', severity: 'critical' })
+    if (
+      settings.rain &&
+      (mainCond.includes('storm') ||
+        mainCond.includes('thunder') ||
+        descCond.includes('heavy rain') ||
+        descCond.includes('torrential'))
+    ) {
+      alerts.push({
+        type: 'rain',
+        message: '🌧️ Heavy Precipitation & Storm Alert — Active electrical discharges and heavy downpours.',
+        severity: 'critical',
+      })
     }
-    if (weather.main.temp > 35) {
-      alerts.push({ type: 'heat', message: 'Extreme Heatwave Advisory — Hydration vigilance strongly recommended.', severity: 'critical' })
+    if (settings.visibility && visibility < 1000) {
+      alerts.push({
+        type: 'visibility',
+        message: '🌫️ Low Visibility Dense Fog Alert — Optical visibility under 1 km; reduce travel speeds.',
+        severity: 'critical',
+      })
+    }
+    if (settings.heat && temp !== undefined && temp > 35) {
+      alerts.push({
+        type: 'heat',
+        message: '🔥 Extreme Heatwave Advisory — Dangerous heat index; hydration vigilance strongly recommended.',
+        severity: 'critical',
+      })
     }
     return alerts
   }

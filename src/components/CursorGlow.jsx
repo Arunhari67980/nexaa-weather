@@ -17,7 +17,7 @@ export default function CursorGlow({ accent = '#f472b6' }) {
 
     let animFrame = null
 
-    const handleMouseMove = (e) => {
+    const handlePointerMove = (e) => {
       pos.current.targetX = e.clientX
       pos.current.targetY = e.clientY
       if (!visible) setVisible(true)

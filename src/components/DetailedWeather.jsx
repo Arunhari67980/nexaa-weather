@@ -1,17 +1,93 @@
-import { Droplets, Wind, Gauge, Eye, Thermometer, Cloud } from 'lucide-react'
+import { Droplets, Wind, Gauge, Eye, Thermometer, Cloud, SunDim } from 'lucide-react'
 
-export default function DetailedWeather({ data, unit }) {
+export default function DetailedWeather({
+  data,
+  unit = 'metric',
+  windUnit = 'm/s',
+  pressureUnit = 'mb',
+}) {
   if (!data) return null
 
-  const speedUnit = unit === 'metric' ? 'm/s' : 'mph'
+  // Safe extraction with robust fallbacks
+  const rawSpeed = data.wind?.speed ?? 0
+  const baseSpeed = unit === 'metric' ? rawSpeed : rawSpeed * 0.44704
+  let displaySpeed = baseSpeed.toFixed(1)
+  let speedLabel = windUnit
+
+  if (windUnit === 'km/h') {
+    displaySpeed = (baseSpeed * 3.6).toFixed(1)
+  } else if (windUnit === 'mph') {
+    displaySpeed = (baseSpeed * 2.23694).toFixed(1)
+  } else {
+    displaySpeed = baseSpeed.toFixed(1)
+    speedLabel = 'm/s'
+  }
+
+  // Pressure conversion from hPa / mb
+  const rawPressure = data.main?.pressure ?? 1013
+  let displayPressure = `${rawPressure} mb`
+  if (pressureUnit === 'inHg') {
+    displayPressure = `${(rawPressure * 0.02953).toFixed(2)} inHg`
+  } else if (pressureUnit === 'mmHg') {
+    displayPressure = `${Math.round(rawPressure * 0.75006)} mmHg`
+  }
+
+  // Dew point approximation
+  const rawTemp = data.main?.temp ?? (unit === 'metric' ? 18 : 64)
+  const rawHumidity = data.main?.humidity ?? 50
+  const tempC = unit === 'metric' ? rawTemp : ((rawTemp - 32) * 5) / 9
+  const dewPointC = Math.round(tempC - (100 - rawHumidity) / 5)
+  const displayDewPoint = unit === 'metric' ? `${dewPointC}°C` : `${Math.round((dewPointC * 9) / 5 + 32)}°F`
 
   const metrics = [
-    { icon: <Thermometer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Feels Like', value: `${Math.round(data.main.feels_like)}°`, code: '01' },
-    { icon: <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Humidity', value: `${data.main.humidity}%`, code: '02' },
-    { icon: <Wind className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Wind Vector', value: `${data.wind.speed.toFixed(1)} ${speedUnit}`, code: '03' },
-    { icon: <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Barometer', value: `${data.main.pressure} hPa`, code: '04' },
-    { icon: <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Visibility', value: `${(data.visibility / 1000).toFixed(1)} km`, code: '05' },
-    { icon: <Cloud className="w-3.5 h-3.5 sm:w-4 sm:h-4" />, label: 'Cloud Cover', value: `${data.clouds.all}%`, code: '06' },
+    {
+      icon: <Thermometer className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Feels Like',
+      value: `${Math.round(data.main?.feels_like ?? rawTemp)}°`,
+      code: '01',
+    },
+    {
+      icon: <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Humidity',
+      value: `${rawHumidity}%`,
+      code: '02',
+    },
+    {
+      icon: <Wind className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Wind Vector',
+      value: `${displaySpeed} ${speedLabel}`,
+      code: '03',
+    },
+    {
+      icon: <Gauge className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Barometer',
+      value: displayPressure,
+      code: '04',
+    },
+    {
+      icon: <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Visibility',
+      value: `${((data.visibility ?? 10000) / 1000).toFixed(1)} km`,
+      code: '05',
+    },
+    {
+      icon: <Cloud className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Cloud Cover',
+      value: `${data.clouds?.all ?? 0}%`,
+      code: '06',
+    },
+    {
+      icon: <SunDim className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Dew Point',
+      value: displayDewPoint,
+      code: '07',
+    },
+    {
+      icon: <Droplets className="w-3.5 h-3.5 sm:w-4 sm:h-4" />,
+      label: 'Sea Pressure',
+      value: `${data.main?.sea_level || rawPressure} hPa`,
+      code: '08',
+    },
   ]
 
   return (
@@ -31,12 +107,12 @@ export default function DetailedWeather({ data, unit }) {
           </h2>
         </div>
         <span className="text-[10px] sm:text-[11px] font-mono uppercase tracking-widest text-white/40">
-          Core Metrics
+          Telemetry Grid
         </span>
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
         {metrics.map((m, idx) => (
           <div
             key={idx}
@@ -64,7 +140,7 @@ export default function DetailedWeather({ data, unit }) {
             <p className="text-[9px] sm:text-[10px] font-mono font-bold text-white/40 uppercase tracking-wider mb-0.5 sm:mb-1">
               {m.label}
             </p>
-            <p className="text-base sm:text-lg md:text-xl font-bold font-mono text-white tracking-tight">
+            <p className="text-sm sm:text-base md:text-lg font-bold font-mono text-white tracking-tight truncate">
               {m.value}
             </p>
           </div>

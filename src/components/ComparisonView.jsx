@@ -110,33 +110,33 @@ export default function ComparisonView({
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                 <Metric
                   label="Apparent Heat"
-                  v1={`${Math.round(currentWeather.main.feels_like)}°`}
-                  v2={`${Math.round(comparisonWeather.main.feels_like)}°`}
+                  v1={`${Math.round(currentWeather.main?.feels_like ?? 20)}°`}
+                  v2={`${Math.round(comparisonWeather.main?.feels_like ?? 20)}°`}
                 />
                 <Metric
                   label="Moisture"
-                  v1={`${currentWeather.main.humidity}%`}
-                  v2={`${comparisonWeather.main.humidity}%`}
+                  v1={`${currentWeather.main?.humidity ?? 50}%`}
+                  v2={`${comparisonWeather.main?.humidity ?? 50}%`}
                 />
                 <Metric
                   label="Wind Vector"
-                  v1={`${currentWeather.wind.speed.toFixed(1)} ${speedUnit}`}
-                  v2={`${comparisonWeather.wind.speed.toFixed(1)} ${speedUnit}`}
+                  v1={`${(currentWeather.wind?.speed ?? 0).toFixed(1)} ${speedUnit}`}
+                  v2={`${(comparisonWeather.wind?.speed ?? 0).toFixed(1)} ${speedUnit}`}
                 />
                 <Metric
                   label="Barometer"
-                  v1={`${currentWeather.main.pressure} hPa`}
-                  v2={`${comparisonWeather.main.pressure} hPa`}
+                  v1={`${currentWeather.main?.pressure ?? 1013} hPa`}
+                  v2={`${comparisonWeather.main?.pressure ?? 1013} hPa`}
                 />
                 <Metric
                   label="Visibility"
-                  v1={`${(currentWeather.visibility / 1000).toFixed(1)} km`}
-                  v2={`${(comparisonWeather.visibility / 1000).toFixed(1)} km`}
+                  v1={`${((currentWeather.visibility ?? 10000) / 1000).toFixed(1)} km`}
+                  v2={`${((comparisonWeather.visibility ?? 10000) / 1000).toFixed(1)} km`}
                 />
                 <Metric
                   label="Clouds"
-                  v1={`${currentWeather.clouds.all}%`}
-                  v2={`${comparisonWeather.clouds.all}%`}
+                  v1={`${currentWeather.clouds?.all ?? 0}%`}
+                  v2={`${comparisonWeather.clouds?.all ?? 0}%`}
                 />
               </div>
 
@@ -148,21 +148,21 @@ export default function ComparisonView({
                 <ul className="space-y-1 text-white/70 text-[11px] sm:text-xs">
                   <li>
                     🌡️{' '}
-                    {currentWeather.main.temp > comparisonWeather.main.temp
+                    {(currentWeather.main?.temp ?? 0) > (comparisonWeather.main?.temp ?? 0)
                       ? currentCity
                       : comparisonCity}{' '}
                     registers higher ambient heat.
                   </li>
                   <li>
                     💨{' '}
-                    {currentWeather.wind.speed > comparisonWeather.wind.speed
+                    {(currentWeather.wind?.speed ?? 0) > (comparisonWeather.wind?.speed ?? 0)
                       ? currentCity
                       : comparisonCity}{' '}
                     exhibits higher aerodynamic wind speed.
                   </li>
                   <li>
                     💧{' '}
-                    {currentWeather.main.humidity > comparisonWeather.main.humidity
+                    {(currentWeather.main?.humidity ?? 0) > (comparisonWeather.main?.humidity ?? 0)
                       ? currentCity
                       : comparisonCity}{' '}
                     has denser atmospheric moisture.
@@ -185,11 +185,13 @@ function CityCard({ name, weather, tempSymbol, accent, tag }) {
       </span>
       <h3 className="text-lg sm:text-xl font-bold font-mono text-white mt-0.5 mb-1">{name}</h3>
       <p className="text-xs text-white/50 capitalize mb-2 font-medium">
-        {weather.weather[0].description}
+        {weather?.weather?.[0]?.description || 'Clear'}
       </p>
-      <div className="text-3xl sm:text-4xl mb-2 weather-icon">{getWeatherIcon(weather.weather[0].icon)}</div>
+      <div className="text-3xl sm:text-4xl mb-2 weather-icon">
+        {getWeatherIcon(weather?.weather?.[0]?.icon || '01d')}
+      </div>
       <p className="text-3xl sm:text-4xl font-bold font-mono tracking-tighter" style={{ color: accent }}>
-        {Math.round(weather.main.temp)}
+        {Math.round(weather?.main?.temp ?? 20)}
         {tempSymbol}
       </p>
     </div>

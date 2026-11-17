@@ -68,21 +68,21 @@ export default function HourlyForecastCarousel({ data, unit }) {
                 </p>
 
                 <div className="text-2xl sm:text-4xl my-1.5 sm:my-2.5 weather-icon sm:group-hover:scale-115 transition-transform">
-                  {getWeatherIcon(item.weather[0].icon)}
+                  {getWeatherIcon(item.weather?.[0]?.icon || '01d')}
                 </div>
 
                 <p className="text-base sm:text-lg font-bold font-mono text-white tracking-tight mb-1">
-                  {Math.round(item.main.temp)}{tempSymbol}
+                  {Math.round(item.main?.temp ?? 20)}{tempSymbol}
                 </p>
 
                 <div className="flex items-center justify-center gap-1 mt-1 pt-1.5 border-t border-white/5">
                   <span className="text-[9px] sm:text-[10px] text-white/50 font-mono">
-                    💧 {item.main.humidity}%
+                    💧 {item.main?.humidity ?? 50}%
                   </span>
                 </div>
 
                 <p className="text-[9px] sm:text-[10px] text-white/40 capitalize truncate mt-0.5">
-                  {item.weather[0].description}
+                  {item.weather?.[0]?.description || 'Clear'}
                 </p>
               </div>
             )

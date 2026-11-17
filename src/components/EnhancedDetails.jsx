@@ -12,12 +12,19 @@ export default function EnhancedDetails({ data, unit, city }) {
   if (!data) return null
 
   const speedUnit = unit === 'metric' ? 'm/s' : 'mph'
-  const activities = getActivitySuggestions(data.weather, data.main.temp)
-  const outfit = getOutfitRecommendation(data.main.temp, data.weather, data.main.humidity)
-  const sunrise = new Date(data.sys.sunrise * 1000)
-  const sunset = new Date(data.sys.sunset * 1000)
-  const windDir = getWindDirection(data.wind.deg)
-  const windEmoji = getWindDirectionEmoji(data.wind.deg)
+  const tempVal = data.main?.temp ?? (unit === 'metric' ? 18 : 64)
+  const humidityVal = data.main?.humidity ?? 50
+  const activities = getActivitySuggestions(data.weather, tempVal)
+  const outfit = getOutfitRecommendation(tempVal, data.weather, humidityVal)
+  const baseTime = (data.dt || 0) * 1000
+  const sunriseTime = data.sys?.sunrise ? data.sys.sunrise * 1000 : baseTime - 18000000
+  const sunsetTime = data.sys?.sunset ? data.sys.sunset * 1000 : baseTime + 18000000
+  const sunrise = new Date(sunriseTime)
+  const sunset = new Date(sunsetTime)
+  const windDegrees = data.wind?.deg ?? 0
+  const windSpeed = data.wind?.speed ?? 0
+  const windDir = getWindDirection(windDegrees)
+  const windEmoji = getWindDirectionEmoji(windDegrees)
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -90,7 +97,7 @@ export default function EnhancedDetails({ data, unit, city }) {
             </h2>
           </div>
           <span className="text-[9px] sm:text-[10px] font-mono text-white/40 uppercase tracking-widest">
-            {windDir} · {data.wind.deg || 0}°
+            {windDir} · {windDegrees}°
           </span>
         </div>
 
@@ -98,7 +105,7 @@ export default function EnhancedDetails({ data, unit, city }) {
           <div>
             <div className="flex items-baseline gap-1.5">
               <span className="text-2xl sm:text-4xl font-bold font-mono text-white">
-                {data.wind.speed.toFixed(1)}
+                {windSpeed.toFixed(1)}
               </span>
               <span className="text-xs font-mono text-white/50 uppercase">{speedUnit}</span>
             </div>
@@ -113,7 +120,7 @@ export default function EnhancedDetails({ data, unit, city }) {
             <div
               className="h-full rounded-full transition-all duration-700"
               style={{
-                width: `${Math.min(100, (data.wind.speed / 25) * 100)}%`,
+                width: `${Math.min(100, (windSpeed / 25) * 100)}%`,
                 background: 'linear-gradient(90deg, var(--theme-accent), var(--theme-accent-secondary))',
               }}
             />
@@ -173,7 +180,7 @@ export default function EnhancedDetails({ data, unit, city }) {
       <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
         <button
           onClick={() =>
-            shareWeather(city, Math.round(data.main.temp), data.weather[0].description)
+            shareWeather(city, Math.round(tempVal), data.weather?.[0]?.description || 'Clear')
           }
           className="flex-1 py-2.5 sm:py-3 px-4 rounded-xl sm:rounded-2xl glass-card flex items-center justify-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-white hover:text-white transition-all group"
         >

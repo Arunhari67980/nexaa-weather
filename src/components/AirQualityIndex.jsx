@@ -1,12 +1,10 @@
-import { getAQILevel } from '../utils/weatherUtils'
 import { ShieldCheck } from 'lucide-react'
 
 export default function AirQualityIndex({ aqi }) {
   if (!aqi || !aqi.list || !aqi.list[0]) return null
 
-  const level = getAQILevel(aqi.list[0].main.aqi)
-  const pollutants = aqi.list[0].components
-  const aqiValue = aqi.list[0].main.aqi
+  const pollutants = aqi.list[0].components || {}
+  const aqiValue = aqi.list[0].main?.aqi || 1
 
   const colors = {
     1: { bg: 'rgba(34, 197, 94, 0.1)', border: '#22c55e', text: '#4ade80', label: 'Good', emoji: '🟢' },
